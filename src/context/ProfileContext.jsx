@@ -1,15 +1,13 @@
 import React, { useState, createContext, useEffect } from "react";
 import axios from "axios";
 
-// eslint-disable-next-line react-refresh/only-export-components
 export const profileContext = createContext();
 
 export default function ProfileContextProvider({ children }) {
-  // state لتخزين بيانات البروفايل
+
   const [profile, setProfile] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // دالة لجلب بيانات البروفايل من السيرفر
   async function getMyProfile() {
     try {
       const res = await axios.get(
@@ -29,7 +27,6 @@ export default function ProfileContextProvider({ children }) {
     }
   }
 
-  // تحميل البيانات عند أول مرة
   useEffect(() => {
     getMyProfile();
   }, []);

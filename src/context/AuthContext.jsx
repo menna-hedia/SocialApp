@@ -1,7 +1,6 @@
 import React, { useState, createContext, useEffect } from "react";
 import { jwtDecode } from "jwt-decode";
 
-// eslint-disable-next-line react-refresh/only-export-components
 export const authContext = createContext();
 
 export default function AuthContextProvider({ children }) {
@@ -40,7 +39,6 @@ export default function AuthContextProvider({ children }) {
 
     useEffect(() => {
         decodeUserToken();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [userToken]);
 
     return (
