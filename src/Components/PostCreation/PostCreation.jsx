@@ -15,9 +15,9 @@ export default function PostCreation() {
   const imageInput = useRef();
   const captionInput = useRef();
 
-  const { profile } = useContext(profileContext);
-  const { photo, username } = profile
-
+const { profile } = useContext(profileContext) || {};
+const { photo = "", username = "User" } = profile || {};
+    
   function handleChangeImage(e) {
     setImagePreview(URL.createObjectURL(e.target.files[0]));
   }
