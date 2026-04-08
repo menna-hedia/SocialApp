@@ -6,6 +6,7 @@ import { IoCloseCircleOutline } from "react-icons/io5";
 import { LuImagePlus } from "react-icons/lu";
 import { toast } from "react-toastify";
 import { profileContext } from "../../context/ProfileContext";
+import LoaderScreen from "../LoaderScreen/LoaderScreen";
 
 export default function PostCreation() {
   const { isOpen, onOpen, onOpenChange, onClose } = useDisclosure();
@@ -76,18 +77,22 @@ const { photo = "", username = "User" } = profile || {};
   })
 
   return (
-    <>
-      <Card className=" my-2 w-200 mx-auto">
+  <>
+    {profile ? (
+      <Card className="my-2 w-200 mx-auto">
         <CardBody className="flex flex-row">
-          <Avatar size="md" className="w-fit" src={photo} />
+          <Avatar size="md" className="w-fit" src={profile.photo} />
           <div
             onClick={onOpen}
-            className=" cursor-pointer w-full ms-2 flex p-2 text-gray-500 rounded-2xl items-center hover:bg-gray-200"
+            className="cursor-pointer w-full ms-2 flex p-2 text-gray-500 rounded-2xl items-center hover:bg-gray-200"
           >
-            <p>What's on your mind, {username}</p>
+            <p>What's on your mind, {profile.username}</p>
           </div>
         </CardBody>
       </Card>
+    ) : (
+      <LoaderScreen/>
+    )}
 
       <Modal isOpen={isOpen} onOpenChange={onOpenChange}>
         <ModalContent>
