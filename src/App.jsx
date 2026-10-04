@@ -15,6 +15,9 @@ import { HeroUIProvider } from "@heroui/react";
 import { ToastContainer } from 'react-toastify';
 import ProfileContextProvider from './context/ProfileContext';
 import About from './Components/About/About';
+import UserProfile from './Components/UserProfile/UserProfile';
+import BookmarksPage from './Components/BookmarksPage/BookmarksPage';
+import NotificationsPage from './Components/NotificationsPage/NotificationsPage';
 
 const App = () => {
 
@@ -28,6 +31,9 @@ const App = () => {
         { path: "profile", element: <RoutesProtector> <Profile /> </RoutesProtector> },
         { path: "about", element: <RoutesProtector> <About /> </RoutesProtector> },
         { path: "postDetails/:id", element: <RoutesProtector> <PostDetails /> </RoutesProtector> },
+        { path: "bookmarks", element: <RoutesProtector><BookmarksPage /></RoutesProtector> },
+        { path: "notifications", element: <RoutesProtector><NotificationsPage /></RoutesProtector> },
+        { path: "user/:userId", element: <RoutesProtector><UserProfile /></RoutesProtector> },
         { path: "*", element: <RoutesProtector> <NotFound /> </RoutesProtector> },
       ]
     },

@@ -5,6 +5,8 @@ import LoaderScreen from "./../LoaderScreen/LoaderScreen";
 import CardHeader from "./../CardHeader/CardHeader";
 import CommentCard from "./../CommentCard/CommentCard";
 import CommentCreation from './../CommentCreation/CommentCreation';
+import PostActions from "../PostActions/PostActions";
+
 
 export default function PostDetails({ queryKey }) {
 
@@ -48,17 +50,18 @@ export default function PostDetails({ queryKey }) {
 
     return (
         <>
-            <div className="flex flex-col items-start mx-auto bg-white p-10 m-6 rounded-xl md:max-w-300">
+            <div className="flex flex-col items-start mx-auto bg-white p-10 rounded-xl md:max-w-300">
                 {/* profile & options  */}
               
                     <CardHeader
-                        photo={photo}
-                        name={name}
-                        description={createdAt.split("T")[0]}
-                        style={"w-18 h-18"}
-                        userId={_id}
-                        postId={id}
-                    />
+    cardType="post"
+    photo={photo}
+    name={name}
+    description={createdAt.split("T")[0]}
+    style={"w-18 h-18"}
+    userId={_id}
+    postId={id}
+/>
     
 
                 {/* post contents  */}
@@ -74,15 +77,13 @@ export default function PostDetails({ queryKey }) {
 
                         <CommentCreation inputStyle={"my-6 bg-gray-100"} buttonStyle={" end-3 bottom-8 "} postId={id} queryKey={queryKey} />
 
-                        <hr className="h-px my-5 mt-5 bg-gray-200 border-0" />
-
-                        <div className="flex  ">
-                            <ul className="flex justify-between items-center text-blue-700">
-                                <li>{likesCount} Likes</li>
-                                <li className="px-6 ">{commentsCount} Comments</li>
-                                <li>{sharesCount} Shares</li>
-                            </ul>
-                        </div>
+                        <PostActions
+    postId={id}
+    likesCount={likesCount}
+    commentsCount={commentsCount}
+    sharesCount={sharesCount}
+    isDetails
+/>
 
                         {comments.map((comment) => (
                             <div className=" mt-6 bg-gray-100 rounded-xl p-2 block w-100" key={comment._id}  >

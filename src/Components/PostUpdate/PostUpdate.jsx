@@ -79,9 +79,6 @@ export default function PostUpdate({ postId, initialBody, initialImage, onClose 
             <LuImagePlus className="text-blue-500 text-xl" />
             <input type="file" hidden ref={imageInput} onChange={handleChangeImage} />
           </label>
-          <Button onPress={onClose} className="bg-red-500 hover:bg-red-400 text-white rounded-4xl">
-            Close
-          </Button>
           <Button
             onPress={mutate}
             className="bg-indigo-500 hover:bg-indigo-400 text-white rounded-4xl"

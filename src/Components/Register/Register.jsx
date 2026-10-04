@@ -1,32 +1,69 @@
-import { useForm } from 'react-hook-form'
+import { useForm } from "react-hook-form";
 import axios from "axios";
-import { useState } from 'react';
-import { SyncLoader } from 'react-spinners';
-import { useNavigate } from 'react-router-dom';
+import { useState } from "react";
+import { SyncLoader } from "react-spinners";
+import { Link, useNavigate } from "react-router-dom";
+import {
+    LuUser,
+    LuAtSign,
+    LuMail,
+    LuCalendar,
+    LuLock,
+    LuEye,
+    LuEyeOff,
+    LuUserPlus,
+} from "react-icons/lu";
 
-// import * as zod from 'zod' ==> zod
-// import { zodResolver } from "@hookform/resolvers/zod" ==> zod
+const inputClass =
+    "w-full rounded-xl bg-gray-100 py-3.5 ps-11 pe-4 text-sm text-gray-800 outline-indigo-500 transition focus:bg-white";
 
-const Register = () => { //values
+const iconClass =
+    "pointer-events-none absolute start-4 top-1/2 -translate-y-1/2 text-lg text-gray-400";
 
-    // states ==> no RHF
-    // const [usernameValue , setUsernameValue]=useState("menna")
+// label + input wrapper + error message
+function Field({ id, label, icon: Icon, error, children }) {
+    return (
+        <div>
+            <label className="mb-2 block text-sm font-medium text-gray-700" htmlFor={id}>
+                {label}
+            </label>
+            <div className="relative">
+                <Icon className={iconClass} />
+                {children}
+            </div>
+            {error && <p className="mt-1.5 text-sm text-red-500">{error.message}</p>}
+        </div>
+    );
+}
 
-    // function handleUserNameChange(e){
-    //     setUsernameValue(e.target.value)
-    // }
+function PasswordToggle({ shown, onToggle }) {
+    return (
+        <button
+            type="button"
+            onClick={onToggle}
+            aria-label={shown ? "Hide password" : "Show password"}
+            className="absolute end-4 top-1/2 -translate-y-1/2 text-lg text-gray-400 transition hover:text-indigo-500"
+        >
+            {shown ? <LuEyeOff /> : <LuEye />}
+        </button>
+    );
+}
 
-    // prevent refresh 
-    // function handleSubmit(e) {
-    //     e.preventDefault();
-    // }
+function getAge(date) {
+    const today = new Date();
+    let age = today.getFullYear() - date.getFullYear();
+    const monthDiff = today.getMonth() - date.getMonth();
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < date.getDate())) age -= 1;
+    return age;
+}
 
-    // handling submit ==> 1 prevent default : no refresh , 
-    // 2 collecting all values of feilds using register and returning them as a parameter for another function
-    // 3 validation using register
-    // 4 get errors using formState
-    // get entier form values using getValues
-    const { handleSubmit, register, formState: { errors, touchedFields }, getValues } = useForm({
+const Register = () => {
+    const {
+        handleSubmit,
+        register,
+        formState: { errors },
+        getValues,
+    } = useForm({
         defaultValues: {
             name: "",
             username: "",
@@ -34,217 +71,229 @@ const Register = () => { //values
             dateOfBirth: "",
             gender: "",
             password: "",
-            rePassword: ""
+            rePassword: "",
         },
         mode: "onChange",
-        // resolver : zodResolver() ==>zod
     });
 
     const [isLoading, setIsLoading] = useState(false);
     const [isSuccessResponse, setIsSuccessResponse] = useState(false);
     const [errorMessage, setErrorMessage] = useState(null);
-    const navigate = useNavigate()
+    const [showPassword, setShowPassword] = useState(false);
+    const [showRePassword, setShowRePassword] = useState(false);
+    const navigate = useNavigate();
 
     function signUp(values) {
         setIsLoading(true);
         setErrorMessage(null);
         setIsSuccessResponse(false);
 
-        axios.post("https://route-posts.routemisr.com/users/signup", values)
-            .then(function (resp) {
-                console.log('resp', resp.data)
+        axios
+            .post("https://route-posts.routemisr.com/users/signup", values)
+            .then(function () {
                 setIsSuccessResponse(true);
                 setTimeout(() => {
                     setIsSuccessResponse(false);
-                    navigate("/login")
+                    navigate("/login");
                 }, 1500);
             })
-            .catch(function () {
-                setErrorMessage("Error occurred ... try again later")
+            .catch(function (err) {
+                setErrorMessage(
+                    err.response?.data?.message || "Error occurred ... try again later"
+                );
             })
             .finally(function () {
-                setIsLoading(false)
-            })
+                setIsLoading(false);
+            });
     }
 
-    return (
-        //*********************************** validation using react-hook-form only *******************************************
+    const genderRules = { required: { value: true, message: "Gender is required" } };
 
-        <>
-            <div className="max-w-4xl max-sm:max-w-lg mx-auto p-8 m-6 shadow-lg bg-white rounded-xl border">
-                <div className="text-center m-12">
-                    <h1 className="text-4xl font-semibold tracking-tight text-balance text-gray-900 sm:text-5xl">Create Your Account</h1>
+    return (
+        <div className="flex w-full items-center justify-center px-4 py-10">
+            <div className="w-full max-w-3xl rounded-xl bg-white p-8 shadow-md sm:p-10">
+                {/* heading */}
+                <div className="mb-8 text-center">
+                    <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-indigo-100 text-indigo-600">
+                        <LuUserPlus className="text-2xl" />
+                    </div>
+                    <h1 className="text-3xl font-bold tracking-tight text-gray-800">
+                        Create your account
+                    </h1>
+                    <p className="mt-2 text-sm text-gray-500">
+                        Join the community and start sharing
+                    </p>
                 </div>
 
-                {/*useform connetion =>  handle submit  && get values of form feilds*/}
-                <form onSubmit={handleSubmit(signUp)} >
-
-                    {/* response  */}
-                    {isSuccessResponse && <div className="block mb-5 bg-green-500 w-full mx-auto text-white text-center text-sm px-4 py-3 rounded-md ">
-                        <p>Account Created Successfully</p>
-                    </div>}
-
-                    {errorMessage && <div className="block mb-5 bg-red-500 w-full mx-auto text-white text-center text-sm px-4 py-3 rounded-md ">
-                        <p>{errorMessage}</p>
-                    </div>}
-
-                    <div className="grid sm:grid-cols-2 gap-8">
-
-                        {/* name  */}
-                        <div>
-                            <label className="text-slate-900 text-sm font-medium mb-2 block" htmlFor="name">Name</label>
-                            <input name="name" type="text" {...register("name", {
-                                required: {
-                                    value: true,
-                                    message: "name is required"
-                                },
-                                minLength: {
-                                    value: 3,
-                                    message: "min length is 3"
-                                },
-                                maxLength: {
-                                    value: 20,
-                                    message: "max length is 20"
-                                }
-                            })}
-                                className="bg-slate-100 w-full text-slate-900 text-sm px-4 py-3 rounded-md focus:bg-transparent outline-blue-500 transition-all"
-                                placeholder="Enter name" />
-                            {errors.name && touchedFields.name && (<p className="text-red-500 text-sm mb-2">{errors.name.message}</p>)}
-
+                <form onSubmit={handleSubmit(signUp)} noValidate>
+                    {/* response */}
+                    {isSuccessResponse && (
+                        <div className="mb-5 w-full rounded-xl bg-green-500 px-4 py-3 text-center text-sm text-white">
+                            <p>Account Created Successfully</p>
                         </div>
+                    )}
 
-                        {/* username  */}
-                        <div>
-                            <label className="text-slate-900 text-sm font-medium mb-2 block " htmlFor="username">Username</label>
-                            <input name="username" type="text"  {...register("username", {
-                                required: {
-                                    value: true,
-                                    message: "username is required"
-                                },
-                                minLength: {
-                                    value: 3,
-                                    message: "min length is 3"
-                                },
-                                maxLength: {
-                                    value: 20,
-                                    message: "max length is 20"
-                                }
-                            })}
-                                className="bg-slate-100 w-full text-slate-900 text-sm px-4 py-3 rounded-md focus:bg-transparent outline-blue-500 transition-all"
-                                placeholder="Enter username" />
-                            {errors.username && touchedFields.username && (<p className="text-red-500 text-sm mb-2">{errors.username.message}</p>)}
+                    {errorMessage && (
+                        <div className="mb-5 w-full rounded-xl bg-red-500 px-4 py-3 text-center text-sm text-white">
+                            <p>{errorMessage}</p>
                         </div>
+                    )}
 
-                        {/* email  */}
-                        <div>
-                            <label className="text-slate-900 text-sm font-medium mb-2 block" htmlFor="email">Email </label>
-                            <input name="email" type="email"  {...register("email", {
-                                required: { value: true, message: "email is required" },
-                                pattern: {
-                                    // eslint-disable-next-line no-useless-escape
-                                    value: /^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/,
-                                    message: "invalid email"
-                                }
-                            })}
-                                className="bg-slate-100 w-full text-slate-900 text-sm px-4 py-3 rounded-md focus:bg-transparent outline-blue-500 transition-all"
-                                placeholder="Enter email" />
-                            {errors.email && touchedFields.email && (<p className="text-red-500 text-sm mb-2">{errors.email.message}</p>)}
+                    <div className="grid gap-5 sm:grid-cols-2">
+                        {/* name */}
+                        <Field id="name" label="Name" icon={LuUser} error={errors.name}>
+                            <input
+                                id="name"
+                                type="text"
+                                autoComplete="name"
+                                placeholder="Enter your name"
+                                className={inputClass}
+                                {...register("name", {
+                                    required: { value: true, message: "Name is required" },
+                                    minLength: { value: 3, message: "Min length is 3" },
+                                    maxLength: { value: 20, message: "Max length is 20" },
+                                })}
+                            />
+                        </Field>
 
-                        </div>
+                        {/* username */}
+                        <Field id="username" label="Username" icon={LuAtSign} error={errors.username}>
+                            <input
+                                id="username"
+                                type="text"
+                                autoComplete="username"
+                                placeholder="Choose a username"
+                                className={inputClass}
+                                {...register("username", {
+                                    required: { value: true, message: "Username is required" },
+                                    minLength: { value: 3, message: "Min length is 3" },
+                                    maxLength: { value: 20, message: "Max length is 20" },
+                                })}
+                            />
+                        </Field>
 
-                        {/* date of birth  */}
-                        <div>
-                            <label className="text-slate-900 text-sm font-medium mb-2 block" htmlFor="dateOfBirth">Date Of Birth</label>
-                            <input name="dateOfBirth" type="date"  {...register("dateOfBirth", {
-                                required: {
-                                    value: true,
-                                    message: "data of birth is required"
-                                },
-                                valueAsDate: true,
-                                validate: (value) => {
-                                    const currentYear = new Date().getFullYear();
-                                    const userYear = value.getFullYear();
-                                    if (currentYear - userYear >= 18) {
-                                        return true;
-                                    }
-                                    return "you must be 18 or older";
-                                }
-                            })}
-                                className="bg-slate-100 w-full text-slate-900 text-sm px-4 py-3 rounded-md 
-                                focus:bg-transparent outline-blue-500 transition-all" />
-                            {errors.dateOfBirth && touchedFields.dateOfBirth && (<p className="text-red-500 text-sm mb-2">{errors.dateOfBirth.message}</p>)}
+                        {/* email */}
+                        <Field id="email" label="Email" icon={LuMail} error={errors.email}>
+                            <input
+                                id="email"
+                                type="email"
+                                autoComplete="email"
+                                placeholder="Enter your email"
+                                className={inputClass}
+                                {...register("email", {
+                                    required: { value: true, message: "Email is required" },
+                                    pattern: {
+                                        // eslint-disable-next-line no-useless-escape
+                                        value: /^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/,
+                                        message: "Invalid email",
+                                    },
+                                })}
+                            />
+                        </Field>
 
-                        </div>
+                        {/* date of birth */}
+                        <Field id="dateOfBirth" label="Date of Birth" icon={LuCalendar} error={errors.dateOfBirth}>
+                            <input
+                                id="dateOfBirth"
+                                type="date"
+                                autoComplete="bday"
+                                className={inputClass}
+                                {...register("dateOfBirth", {
+                                    required: { value: true, message: "Date of birth is required" },
+                                    valueAsDate: true,
+                                    validate: (value) => {
+                                        if (!value || isNaN(value)) return "Date of birth is required";
+                                        return getAge(value) >= 18 || "You must be 18 or older";
+                                    },
+                                })}
+                            />
+                        </Field>
 
-                        {/* password  */}
-                        <div>
-                            <label className="text-slate-900 text-sm font-medium mb-2 block" htmlFor="password">Password</label>
-                            <input name="password" type="password"  {...register("password", {
-                                required: { value: true, message: "password is required" },
-                                pattern: {
-                                    value: /^(?=.*[A-Z])(?=.*[a-z])(?=.*[0-9])(?=.*[#?!@$%^&*-]).{8,}$/,
-                                    message: "pass must start uppercase and includes numbers and special chars"
-                                }
-                            })}
-                                className="bg-slate-100 w-full text-slate-900 text-sm px-4 py-3 rounded-md focus:bg-transparent outline-blue-500 transition-all"
-                                placeholder="Enter password" />
-                            {errors.password && touchedFields.password && (<p className="text-red-500 text-sm mb-2">{errors.password.message}</p>)}
+                        {/* password */}
+                        <Field id="password" label="Password" icon={LuLock} error={errors.password}>
+                            <input
+                                id="password"
+                                type={showPassword ? "text" : "password"}
+                                autoComplete="new-password"
+                                placeholder="Enter your password"
+                                className={`${inputClass} pe-12`}
+                                {...register("password", {
+                                    required: { value: true, message: "Password is required" },
+                                    pattern: {
+                                        value: /^(?=.*[A-Z])(?=.*[a-z])(?=.*[0-9])(?=.*[#?!@$%^&*-]).{8,}$/,
+                                        message:
+                                            "At least 8 characters with uppercase, lowercase, a number and a special character",
+                                    },
+                                })}
+                            />
+                            <PasswordToggle shown={showPassword} onToggle={() => setShowPassword((v) => !v)} />
+                        </Field>
 
-                        </div>
+                        {/* confirm password */}
+                        <Field id="rePassword" label="Confirm Password" icon={LuLock} error={errors.rePassword}>
+                            <input
+                                id="rePassword"
+                                type={showRePassword ? "text" : "password"}
+                                autoComplete="new-password"
+                                placeholder="Confirm your password"
+                                className={`${inputClass} pe-12`}
+                                {...register("rePassword", {
+                                    required: { value: true, message: "Password confirmation is required" },
+                                    validate: (value) =>
+                                        value === getValues("password") || "Passwords do not match",
+                                })}
+                            />
+                            <PasswordToggle shown={showRePassword} onToggle={() => setShowRePassword((v) => !v)} />
+                        </Field>
 
-                        {/* repassword  */}
-                        <div>
-                            <label className="text-slate-900 text-sm font-medium mb-2 block" htmlFor="repassword">Confirm Password</label>
-                            <input name="rePassword" type="password" {...register("rePassword", {
-                                required: {
-                                    value: true,
-                                    message: "password confirmation is required"
-                                },
-                                validate: (value) => {
-                                    if (value === getValues("password")) {
-                                        return true;
-                                    }
-                                    return "passwords do not match";
-                                }
-                            })}
-                                className="bg-slate-100 w-full text-slate-900 text-sm px-4 py-3 rounded-md focus:bg-transparent outline-blue-500 transition-all"
-                                placeholder="Confirm password" />
-                            {errors.rePassword && touchedFields.rePassword && (<p className="text-red-500 text-sm mb-2">{errors.rePassword.message}</p>)}
-                        </div>
-
-                        {/* gender  */}
-                        <div>
-                            <div className="flex items-center gap-6">
-                                <div className="flex items-center gap-2">
-                                    <input name="gender" type="radio" {...register("gender", {
-                                        required: { value: true, message: "gender is required" },
-                                        pattern: {
-                                            value: /^(male|female)$/
-                                        }
-                                    })}
-                                        className="w-5 h-5" id="male" value="male" />
-                                    <label className="text-slate-900 text-sm font-medium" htmlFor="male">Male</label>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                    <input name="gender" type="radio" {...register("gender")}
-                                        className="w-5 h-5" id="female" value="female" />
-                                    <label className="text-slate-900 text-sm font-medium" htmlFor="female">Female</label>
-                                </div>
+                        {/* gender */}
+                        <div className="sm:col-span-2">
+                            <p className="mb-2 text-sm font-medium text-gray-700">Gender</p>
+                            <div className="flex gap-4">
+                                {["male", "female"].map((g) => (
+                                    <label
+                                        key={g}
+                                        htmlFor={g}
+                                        className="flex flex-1 cursor-pointer items-center gap-3 rounded-xl bg-gray-100 px-4 py-3.5 text-sm font-medium capitalize text-gray-700 transition has-[:checked]:bg-indigo-50 has-[:checked]:text-indigo-600 has-[:checked]:ring-2 has-[:checked]:ring-indigo-500"
+                                    >
+                                        <input
+                                            id={g}
+                                            type="radio"
+                                            value={g}
+                                            className="h-4 w-4 accent-indigo-500"
+                                            {...register("gender", genderRules)}
+                                        />
+                                        {g}
+                                    </label>
+                                ))}
                             </div>
-                            {errors.gender && touchedFields.gender && (<p className="text-red-500 text-sm my-2 ">{errors.gender.message}</p>)}
+                            {errors.gender && (
+                                <p className="mt-1.5 text-sm text-red-500">{errors.gender.message}</p>
+                            )}
                         </div>
                     </div>
-                    {/* submit button  */}
-                    <div className="mt-12">
-                        <button type="submit" disabled={isLoading}
-                            className="mx-auto block min-w-32 py-3 px-6 text-sm font-medium rounded-4xl text-white bg-indigo-500 hover:bg-indigo-400 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500">
-                            {isLoading ? <SyncLoader color="#ffffff" size={8} speedMultiplier={1} /> : "Sign up"}
-                        </button>
-                    </div>
+
+                    {/* submit */}
+                    <button
+                        type="submit"
+                        disabled={isLoading}
+                        className={`mt-8 flex w-full items-center justify-center rounded-4xl bg-indigo-500 px-6 py-3.5 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-400 ${
+                            isLoading ? "cursor-not-allowed opacity-70" : ""
+                        }`}
+                    >
+                        {isLoading ? <SyncLoader color="#ffffff" size={8} speedMultiplier={1} /> : "Sign up"}
+                    </button>
+
+                    <p className="mt-6 text-center text-sm text-gray-500">
+                        Already have an account?{" "}
+                        <Link to="/login" className="font-semibold text-indigo-500 hover:underline">
+                            Sign in
+                        </Link>
+                    </p>
                 </form>
             </div>
-        </>
-    )
-}
+        </div>
+    );
+};
 
-export default Register
+export default Register;

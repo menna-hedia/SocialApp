@@ -1,109 +1,163 @@
-import { useForm } from 'react-hook-form'
+import { useForm } from "react-hook-form";
 import axios from "axios";
-import { useContext, useState } from 'react';
-import { SyncLoader } from 'react-spinners';
-import { useNavigate } from 'react-router-dom';
-import { authContext } from '../../context/AuthContext';
+import { useContext, useState } from "react";
+import { SyncLoader } from "react-spinners";
+import { Link, useNavigate } from "react-router-dom";
+import { LuMail, LuLock, LuEye, LuEyeOff, LuLogIn } from "react-icons/lu";
+import { authContext } from "../../context/AuthContext";
 
-const Login = () => { //values
+const inputClass =
+    "w-full rounded-xl bg-gray-100 py-3.5 ps-11 pe-4 text-sm text-gray-800 outline-indigo-500 transition focus:bg-white";
 
-    const { handleSubmit, register, formState: { errors, touchedFields }} = useForm({
-        defaultValues: {
-            email: "",
-            password: ""
-        },
+const Login = () => {
+    const {
+        handleSubmit,
+        register,
+        formState: { errors },
+    } = useForm({
+        defaultValues: { email: "", password: "" },
         mode: "onChange",
     });
 
     const [isLoading, setIsLoading] = useState(false);
     const [isSuccessResponse, setIsSuccessResponse] = useState(false);
     const [errorMessage, setErrorMessage] = useState(null);
-    const navigate = useNavigate()
+    const [showPassword, setShowPassword] = useState(false);
+    const navigate = useNavigate();
 
-    const { setAuthenticatedUserToken } = useContext(authContext)
+    const { setAuthenticatedUserToken } = useContext(authContext);
 
     function signIn(values) {
         setIsLoading(true);
         setErrorMessage(null);
         setIsSuccessResponse(false);
 
-        axios.post("https://route-posts.routemisr.com/users/signin", values)
+        axios
+            .post("https://route-posts.routemisr.com/users/signin", values)
             .then(function (resp) {
                 setAuthenticatedUserToken(resp.data.data.token);
-                localStorage.setItem("token", resp.data.data.token)
+                localStorage.setItem("token", resp.data.data.token);
                 setIsSuccessResponse(true);
                 setTimeout(() => {
                     setIsSuccessResponse(false);
-                    navigate("/home")
+                    navigate("/home");
                 }, 1500);
             })
             .catch(function () {
-                setErrorMessage("Invalid Email or Password")
+                setErrorMessage("Invalid Email or Password");
             })
             .finally(function () {
-                setIsLoading(false)
-            })
+                setIsLoading(false);
+            });
     }
 
     return (
-        //*********************************** validation using react-hook-form only *******************************************
-
-        <>
-            <div className="max-w-4xl max-sm:max-w-lg mx-auto p-8 m-6 shadow-lg bg-white rounded-xl border">
-                <div className="text-center m-12">
-                    <h1 className="text-4xl font-semibold tracking-tight text-balance text-gray-900 sm:text-5xl">Sign In Into Your Account</h1>
+        <div className="flex min-h-[60vh] w-full items-center justify-center px-4 py-10">
+            <div className="w-full max-w-lg rounded-xl bg-white p-8 shadow-md sm:p-10">
+                {/* heading */}
+                <div className="mb-8 text-center">
+                    <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-indigo-100 text-indigo-600">
+                        <LuLogIn className="text-2xl" />
+                    </div>
+                    <h1 className="text-3xl font-bold tracking-tight text-gray-800">
+                        Welcome back
+                    </h1>
+                    <p className="mt-2 text-sm text-gray-500">
+                        Sign in to your account to continue
+                    </p>
                 </div>
 
-                {/*useform connetion =>  handle submit  && get values of form feilds*/}
-                <form onSubmit={handleSubmit(signIn)} >
+                <form onSubmit={handleSubmit(signIn)} noValidate>
+                    {/* response */}
+                    {isSuccessResponse && (
+                        <div className="mb-5 w-full rounded-xl bg-green-500 px-4 py-3 text-center text-sm text-white">
+                            <p>Login Successful</p>
+                        </div>
+                    )}
 
-                    {/* response  */}
-                    {isSuccessResponse && <div className="block mb-5 bg-green-500 w-full mx-auto text-white text-center text-sm px-4 py-3 rounded-md ">
-                        <p>Login Successful</p>
-                    </div>}
+                    {errorMessage && (
+                        <div className="mb-5 w-full rounded-xl bg-red-500 px-4 py-3 text-center text-sm text-white">
+                            <p>{errorMessage}</p>
+                        </div>
+                    )}
 
-                    {errorMessage && <div className="block mb-5 bg-red-500 w-full mx-auto text-white text-center text-sm px-4 py-3 rounded-md ">
-                        <p>{errorMessage}</p>
-                    </div>}
-
-                    <div className="grid sm:grid-cols-2 gap-8">
-
-                        {/* email  */}
+                    <div className="space-y-5">
+                        {/* email */}
                         <div>
-                            <label className="text-slate-900 text-sm font-medium mb-2 block" htmlFor="email">Email </label>
-                            <input name="email" type="email"  {...register("email", {
-                                required: { value: true, message: "email is required" },
-                            })}
-                                className="bg-slate-100 w-full text-slate-900 text-sm px-4 py-3 rounded-md focus:bg-transparent outline-blue-500 transition-all"
-                                placeholder="Enter email" />
-                            {errors.email && touchedFields.email && (<p className="text-red-500 text-sm mb-2">{errors.email.message}</p>)}
-
+                            <label className="mb-2 block text-sm font-medium text-gray-700" htmlFor="email">
+                                Email
+                            </label>
+                            <div className="relative">
+                                <LuMail className="pointer-events-none absolute start-4 top-1/2 -translate-y-1/2 text-lg text-gray-400" />
+                                <input
+                                    id="email"
+                                    type="email"
+                                    autoComplete="email"
+                                    placeholder="Enter your email"
+                                    className={inputClass}
+                                    {...register("email", {
+                                        required: { value: true, message: "Email is required" },
+                                    })}
+                                />
+                            </div>
+                            {errors.email && (
+                                <p className="mt-1.5 text-sm text-red-500">{errors.email.message}</p>
+                            )}
                         </div>
 
-                        {/* password  */}
+                        {/* password */}
                         <div>
-                            <label className="text-slate-900 text-sm font-medium mb-2 block" htmlFor="password">Password</label>
-                            <input name="password" type="password"  {...register("password", {
-                                required: { value: true, message: "password is required" },
-                            })}
-                                className="bg-slate-100 w-full text-slate-900 text-sm px-4 py-3 rounded-md focus:bg-transparent outline-blue-500 transition-all"
-                                placeholder="Enter password" />
-                            {errors.password && touchedFields.password && (<p className="text-red-500 text-sm mb-2">{errors.password.message}</p>)}
-
+                            <label className="mb-2 block text-sm font-medium text-gray-700" htmlFor="password">
+                                Password
+                            </label>
+                            <div className="relative">
+                                <LuLock className="pointer-events-none absolute start-4 top-1/2 -translate-y-1/2 text-lg text-gray-400" />
+                                <input
+                                    id="password"
+                                    type={showPassword ? "text" : "password"}
+                                    autoComplete="current-password"
+                                    placeholder="Enter your password"
+                                    className={`${inputClass} pe-12`}
+                                    {...register("password", {
+                                        required: { value: true, message: "Password is required" },
+                                    })}
+                                />
+                                <button
+                                    type="button"
+                                    onClick={() => setShowPassword((v) => !v)}
+                                    aria-label={showPassword ? "Hide password" : "Show password"}
+                                    className="absolute end-4 top-1/2 -translate-y-1/2 text-lg text-gray-400 transition hover:text-indigo-500"
+                                >
+                                    {showPassword ? <LuEyeOff /> : <LuEye />}
+                                </button>
+                            </div>
+                            {errors.password && (
+                                <p className="mt-1.5 text-sm text-red-500">{errors.password.message}</p>
+                            )}
                         </div>
+                    </div>
 
-                    </div>
-                    {/* submit button  */}
-                    <div className="mt-12">
-                        <button type="submit" disabled={isLoading}
-                            className="mx-auto block min-w-32 py-3 px-6 text-sm font-medium rounded-4xl text-white bg-indigo-500 hover:bg-indigo-400 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500">
-                            {isLoading ? <SyncLoader color="#ffffff" size={8} speedMultiplier={1}/> : "Sign in"}
-                        </button>
-                    </div>
+                    {/* submit */}
+                    <button
+                        type="submit"
+                        disabled={isLoading}
+                        className={`mt-8 flex w-full items-center justify-center rounded-4xl bg-indigo-500 px-6 py-3.5 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-400 ${
+                            isLoading ? "cursor-not-allowed opacity-70" : ""
+                        }`}
+                    >
+                        {isLoading ? <SyncLoader color="#ffffff" size={8} speedMultiplier={1} /> : "Sign in"}
+                    </button>
+
+                    <p className="mt-6 text-center text-sm text-gray-500">
+                        Don't have an account?{" "}
+                        <Link to="/register" className="font-semibold text-indigo-500 hover:underline">
+                            Register
+                        </Link>
+                    </p>
                 </form>
             </div>
-        </>
-    )
-}
+        </div>
+    );
+};
 
-export default Login
+export default Login;

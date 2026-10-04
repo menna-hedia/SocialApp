@@ -1,137 +1,165 @@
-import { Avatar, Button, Card, CardBody, Modal, ModalBody, ModalContent, ModalFooter, ModalHeader, Textarea, useDisclosure } from "@heroui/react";
+import {
+  Avatar, Button, Card, CardBody, Modal, ModalBody, ModalContent,
+  ModalFooter, ModalHeader, Textarea, useDisclosure,
+} from "@heroui/react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 import { useContext, useRef, useState } from "react";
-import { IoCloseCircleOutline } from "react-icons/io5";
-import { LuImagePlus } from "react-icons/lu";
+import { LuImagePlus, LuX } from "react-icons/lu";
 import { toast } from "react-toastify";
 import { profileContext } from "../../context/ProfileContext";
 import LoaderScreen from "../LoaderScreen/LoaderScreen";
 
-export default function PostCreation() {
+const toastOptions = { position: "top-center", autoClose: 1000, theme: "dark" };
+
+export default function PostCreation({ compact = false }) {
   const { isOpen, onOpen, onOpenChange, onClose } = useDisclosure();
 
+  const [caption, setCaption] = useState("");
+  const [imageFile, setImageFile] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
+  const imageInput = useRef(null);
 
-  const imageInput = useRef();
-  const captionInput = useRef();
+  const queryClient = useQueryClient();
+  const { profile } = useContext(profileContext) || {};
+  const { photo = "", username = "User" } = profile || {};
 
-const { profile } = useContext(profileContext) || {};
-const { photo = "", username = "User" } = profile || {};
-    
   function handleChangeImage(e) {
-    setImagePreview(URL.createObjectURL(e.target.files[0]));
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setImageFile(file);
+    setImagePreview(URL.createObjectURL(file));
   }
 
   function handleClearImage() {
+    if (imagePreview) URL.revokeObjectURL(imagePreview);
+    setImageFile(null);
     setImagePreview(null);
-    imageInput.current.value = "";
+    if (imageInput.current) imageInput.current.value = "";
   }
 
-  function handleCreatePost() {
-    const postObj = new FormData();
-    postObj.append("body", captionInput.current.value);
-
-    if (imageInput.current.files[0]) {
-      postObj.append("image", imageInput.current.files[0]);
-    }
-
-    return axios.post(`https://route-posts.routemisr.com/posts`, postObj, {
-      headers: { token: localStorage.getItem('token') }
-    })
+  function resetForm() {
+    handleClearImage();
+    setCaption("");
   }
 
-  const queryClient = useQueryClient();
+  function handleClose() {
+    resetForm();
+    onClose();
+  }
+
+  // closing with Esc or a click on the backdrop also resets the form
+  function handleOpenChange(open) {
+    if (!open) resetForm();
+    onOpenChange(open);
+  }
+
   const { isPending, mutate } = useMutation({
-    mutationFn: handleCreatePost,
+    mutationFn: () => {
+      const postObj = new FormData();
+      postObj.append("body", caption);
+      if (imageFile) postObj.append("image", imageFile);
 
+      return axios.post("https://route-posts.routemisr.com/posts", postObj, {
+        headers: { token: localStorage.getItem("token") },
+      });
+    },
     onSuccess: () => {
-      handleClearImage();
-      captionInput.current.value = "";
-      onClose();
+      handleClose();
       queryClient.invalidateQueries({ queryKey: ["getPosts"] });
-      toast.success("Post Created Succefully", {
-        position: "top-center",
-        autoClose: 1000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-        progress: undefined,
-        theme: "dark",
-      })
+      queryClient.invalidateQueries({ queryKey: ["userPosts"] });
+      toast.success("Post Created Successfully", toastOptions);
     },
-    onError: () => {
-      toast.error('Error occurred ... try again later', {
-        position: "top-center",
-        autoClose: 1000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-        progress: undefined,
-        theme: "dark",
-      })
+    onError: (err) => {
+      toast.error(
+        err.response?.data?.message || "Error occurred ... try again later",
+        toastOptions
+      );
     },
-    onSettled: () => { },
-  })
+  });
+
+  const canPost = (caption.trim() !== "" || imageFile) && !isPending;
 
   return (
-  <>
-    {profile ? (
-      <Card className="my-2 w-200 mx-auto">
-        <CardBody className="flex flex-row">
-          <Avatar size="md" className="w-fit" src={profile.photo} />
+    <>
+      {compact ? (
+        profile && (
           <div
             onClick={onOpen}
-            className="cursor-pointer w-full ms-2 flex p-2 text-gray-500 rounded-2xl items-center hover:bg-gray-200"
+            className="flex w-full cursor-pointer items-center gap-3 rounded-full bg-gray-100 px-4 py-2.5 text-sm text-gray-500 transition hover:bg-gray-200"
           >
-            <p>What's on your mind, {profile.username}</p>
+            <Avatar size="sm" src={profile.photo} />
+            <p className="truncate">What's on your mind, {profile.username}?</p>
           </div>
-        </CardBody>
-      </Card>
-    ) : (
-      <LoaderScreen/>
-    )}
+        )
+      ) : profile ? (
+        <Card className="mx-auto w-full max-w-2xl">
+          <CardBody className="flex flex-row items-center p-5">
+            <Avatar size="lg" className="w-fit" src={profile.photo} />
+            <div
+              onClick={onOpen}
+              className="ms-3 flex w-full cursor-pointer items-center rounded-2xl bg-gray-100 px-5 py-4 text-lg text-gray-500 hover:bg-gray-200"
+            >
+              <p>What's on your mind, {profile.username}</p>
+            </div>
+          </CardBody>
+        </Card>
+      ) : (
+        <LoaderScreen />
+      )}
 
-      <Modal isOpen={isOpen} onOpenChange={onOpenChange}>
+      <Modal isOpen={isOpen} onOpenChange={handleOpenChange}>
         <ModalContent>
-          {(onClose) => (
+          {() => (
             <>
               <ModalHeader className="flex flex-col gap-1 text-center">Create Post</ModalHeader>
+
               <ModalBody>
                 <div className="flex items-center gap-2">
                   <Avatar size="md" className="w-fit" src={photo} />
                   <h2>{username}</h2>
                 </div>
 
-                <Textarea ref={captionInput} placeholder="What's on your mind" />
+                <Textarea
+                  value={caption}
+                  onValueChange={setCaption}
+                  placeholder="What's on your mind"
+                  minRows={4}
+                />
 
-                {imagePreview && <div className="relative w-100">
-                  <img
-                    alt="HeroUI hero Image"
-                    src={imagePreview}
-                    className="rounded-lg"
-                  />
-                  <IoCloseCircleOutline
-                    onClick={handleClearImage}
-                    className="absolute top-2 right-2 z-9999 text-white cursor-pointer text-2xl"
-                  />
-                </div>}
+                {imagePreview && (
+                  <div className="relative w-full">
+                    <img alt="post preview" src={imagePreview} className="w-full rounded-lg" />
+                    <button
+                      type="button"
+                      onClick={handleClearImage}
+                      aria-label="Remove image"
+                      className="absolute right-2 top-2 flex h-7 w-7 items-center justify-center rounded-full bg-black/60 text-white transition hover:bg-red-500"
+                    >
+                      <LuX className="text-base" />
+                    </button>
+                  </div>
+                )}
               </ModalBody>
+
               <ModalFooter className="flex items-center">
-                <label className="flex-1">
-                  <LuImagePlus className="text-blue-500 text-xl cursor-pointer" />
-                  <input type="file" hidden
+                <label className="flex-1 cursor-pointer" aria-label="Add image">
+                  <LuImagePlus className="text-xl text-blue-500" />
+                  <input
+                    type="file"
+                    accept="image/*"
+                    hidden
                     onChange={handleChangeImage}
-                    ref={imageInput} />
+                    ref={imageInput}
+                  />
                 </label>
-                <Button className="rounded-4xl text-white bg-red-500 hover:bg-red-400 focus-visible:outline-red-500" onPress={onClose}>
-                  Close
-                </Button>
-                <Button className="rounded-4xl text-white bg-indigo-500 hover:bg-indigo-400 focus-visible:outline-indigo-500"
-                  disabled={isPending}
-                  onPress={mutate}>
+
+                <Button
+                  className="rounded-4xl bg-indigo-500 text-white hover:bg-indigo-400"
+                  isDisabled={!canPost}
+                  isLoading={isPending}
+                  onPress={() => mutate()}
+                >
                   Post
                 </Button>
               </ModalFooter>

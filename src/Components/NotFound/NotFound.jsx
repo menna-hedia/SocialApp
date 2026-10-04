@@ -1,30 +1,46 @@
-import React from 'react'
-import { Link } from 'react-router-dom'
+import React from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { LuHouse, LuArrowLeft } from "react-icons/lu";
 
 const NotFound = () => {
-  return (
-    <>
-    <main className="grid min-h-full h-100 place-items-center bg-gray-900 px-6 py-24 sm:py-32 lg:px-8">
-        <div className="text-center ">
-          <p className="text-base font-semibold text-indigo-400">404</p>
-          <h1 className="mt-4 text-5xl font-semibold tracking-tight text-balance text-white sm:text-7xl">
-            Page not found
-          </h1>
-          <p className="mt-6 text-lg font-medium text-pretty text-gray-400 sm:text-xl/8">
-            Sorry, we couldn’t find the page you’re looking for.
-          </p>
-          <div className="mt-10 flex items-center justify-center gap-x-6">
-            <Link
-              to="/home"
-              className="rounded-4xl bg-indigo-500 px-3.5 py-2.5 text-sm font-semibold text-white shadow-xs hover:bg-indigo-400 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500"
-            >
-              Go back home
-            </Link>
-          </div>
-        </div>
-      </main>
-    </>
-  )
-}
+  const navigate = useNavigate();
 
-export default NotFound
+  return (
+    <div className="flex min-h-[60vh] w-full items-center justify-center rounded-xl bg-white px-6 py-16 shadow-md">
+      <div className="text-center">
+        <p className="text-8xl font-extrabold tracking-tight text-indigo-500 sm:text-9xl">
+          404
+        </p>
+
+        <h1 className="mt-4 text-3xl font-bold tracking-tight text-gray-800 sm:text-5xl">
+          Page not found
+        </h1>
+
+        <p className="mx-auto mt-4 max-w-md text-base text-gray-500 sm:text-lg">
+          Sorry, we couldn't find the page you're looking for. It may have been moved or deleted.
+        </p>
+
+        <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
+          <Link
+            to="/home"
+            className="inline-flex items-center gap-2 rounded-4xl bg-indigo-500 px-6 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-400"
+          >
+            <LuHouse className="text-lg" />
+            Go back home
+          </Link>
+
+          <button
+            type="button"
+            onClick={() => navigate(-1)}
+            className="inline-flex items-center gap-2 rounded-4xl bg-gray-100 px-6 py-3 text-sm font-semibold text-gray-700 transition hover:bg-gray-200"
+          >
+            <LuArrowLeft className="text-lg" />
+            Previous page
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default NotFound;
