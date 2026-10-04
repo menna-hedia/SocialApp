@@ -76,8 +76,8 @@ const Navbar = () => {
                 </div>
             ) : (
                 <div className="ml-auto hidden gap-4 lg:flex">
-                    <Link to="/login" className="font-semibold hover:text-gray-700">Login</Link>
-                    <Link to="/register" className="font-semibold hover:text-gray-700">Register</Link>
+                    <Link to="/login" className="font-semibold hover:text-gray-700">Sign In</Link>
+                    <Link to="/register" className="font-semibold hover:text-gray-700">Sign Up</Link>
                 </div>
             )}
 
@@ -116,7 +116,7 @@ const Navbar = () => {
                                             className="w-full rounded p-2 text-left text-red-500 hover:bg-red-100"
                                             onClick={handleLogout}
                                         >
-                                            Logout
+                                            Sign Out
                                         </button>
                                     </li>
                                 </ul>
@@ -169,14 +169,14 @@ const Navbar = () => {
                                             onClick={handleLogout}
                                         >
                                             <LuLogOut className="text-xl" />
-                                            Logout
+                                            Sign Out
                                         </button>
                                     </li>
                                 </>
                             ) : (
                                 <>
-                                    <li><NavLink to="/login" className={mobileLinkClass} onClick={() => setOpenMobile(false)}>Login</NavLink></li>
-                                    <li><NavLink to="/register" className={mobileLinkClass} onClick={() => setOpenMobile(false)}>Register</NavLink></li>
+                                    <li><NavLink to="/login" className={mobileLinkClass} onClick={() => setOpenMobile(false)}>Sign In</NavLink></li>
+                                    <li><NavLink to="/register" className={mobileLinkClass} onClick={() => setOpenMobile(false)}>Sign Up</NavLink></li>
                                 </>
                             )}
                         </ul>
