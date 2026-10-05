@@ -139,6 +139,10 @@ export default function CardHeader({ photo, name, description, style, userId, po
                     <PostUpdate
                         postId={postId}
                         initialBody={body}
+                        initialImage={image}
+                        authorPhoto={photo}
+                        authorName={name}
+                        date={description}
                         onClose={() => setShowUpdateModal(false)}
                     />
                 )

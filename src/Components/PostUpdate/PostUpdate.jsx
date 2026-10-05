@@ -1,90 +1,247 @@
-import React, { useState, useRef } from "react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useRef, useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 import { toast } from "react-toastify";
-import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Button, Textarea } from "@heroui/react";
-import { IoCloseCircleOutline } from "react-icons/io5";
-import { LuImagePlus } from "react-icons/lu";
-import { SyncLoader } from 'react-spinners';
+import {
+  Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Button,
+} from "@heroui/react";
+import { SyncLoader } from "react-spinners";
+import { LuImagePlus, LuX, LuRotateCcw } from "react-icons/lu";
 
-export default function PostUpdate({ postId, initialBody, initialImage, onClose }) {
-  const [imagePreview, setImagePreview] = useState(initialImage || null);
-  const [bodyText, setBodyText] = useState(initialBody || "");
+const FALLBACK_AVATAR = "https://avatars.githubusercontent.com/u/86160567?s=200&v=4";
+const toastOpts = { position: "top-center", autoClose: 1500, theme: "dark" };
 
-  const imageInput = useRef();
+// the docs don't say how to delete an image, so we try these in order
+const REMOVE_VARIANTS = [
+  { image: "" },
+  { image: null },
+  { removeImage: true },
+  { deleteImage: true },
+];
 
+// 1) loads the post by itself, so it doesn't depend on props from the parents
+export default function PostUpdate({ postId, initialBody, initialImage, authorPhoto, authorName, date, onClose }) {
+  const { data, isLoading } = useQuery({
+    queryKey: ["getPostDetails", postId],
+    queryFn: () =>
+      axios
+        .get(`https://route-posts.routemisr.com/posts/${postId}`, {
+          headers: { token: localStorage.getItem("token") },
+        })
+        .then((res) => res.data),
+  });
+
+  const post = data?.data?.post;
+  if (post) console.log("editing post:", post);
+
+  if (isLoading) {
+    return (
+      <Modal isOpen onOpenChange={(open) => !open && onClose()} size="2xl">
+        <ModalContent>
+          <ModalBody className="flex items-center justify-center py-16">
+            <SyncLoader color="#6366f1" size={10} />
+          </ModalBody>
+        </ModalContent>
+      </Modal>
+    );
+  }
+
+  // the props are only a fallback if the request fails
+  return (
+    <PostUpdateForm
+      key={postId}
+      postId={postId}
+      body={post?.body ?? initialBody ?? ""}
+      image={post?.image ?? initialImage ?? null}
+      authorPhoto={post?.user?.photo ?? authorPhoto}
+      authorName={post?.user?.name ?? authorName}
+      date={post?.createdAt?.split("T")[0] ?? date}
+      onClose={onClose}
+    />
+  );
+}
+
+// 2) the edit form
+function PostUpdateForm({ postId, body, image, authorPhoto, authorName, date, onClose }) {
+  const [bodyText, setBodyText] = useState(body);
+  const [newImage, setNewImage] = useState(null);
+  const [preview, setPreview] = useState(image);
+  const [removeImage, setRemoveImage] = useState(false);
+  const imageInput = useRef(null);
   const queryClient = useQueryClient();
 
+  const textChanged = bodyText !== body;
+  const hasChanges = textChanged || Boolean(newImage) || removeImage;
+  const hasContent = bodyText.trim() !== "" || Boolean(preview);
+
   function handleChangeImage(e) {
-    if (e.target.files[0]) {
-      setImagePreview(URL.createObjectURL(e.target.files[0]));
-    }
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    setNewImage(file);
+    setPreview(URL.createObjectURL(file));
+    setRemoveImage(false);
   }
 
   function handleClearImage() {
-    setImagePreview(null);
-    imageInput.current.value = "";
+    setNewImage(null);
+    setPreview(null);
+    // only tell the server to delete when the image was already saved on it
+    setRemoveImage(Boolean(image));
   }
 
-  function updatePost() {
-    const formData = new FormData();
-    formData.append("body", bodyText);
-    if (imageInput.current.files[0]) {
-      formData.append("image", imageInput.current.files[0]);
+  function handleReset() {
+    setBodyText(body);
+    setNewImage(null);
+    setPreview(image);
+    setRemoveImage(false);
+  }
+
+  async function savePost() {
+    const url = `https://route-posts.routemisr.com/posts/${postId}`;
+    const headers = { token: localStorage.getItem("token") };
+    const sendBody = bodyText.trim() !== "" || textChanged;
+
+    // new image picked (the text is optional)
+    if (newImage) {
+      const formData = new FormData();
+      if (sendBody) formData.append("body", bodyText);
+      formData.append("image", newImage);
+      return axios.put(url, formData, { headers });
     }
 
-    return axios.put(`https://route-posts.routemisr.com/posts/${postId}`, formData, {
-      headers: {
-        token: localStorage.getItem("token"),
-      },
-    });
+    // saved image removed, keep the text
+    if (removeImage) {
+      let lastError;
+      for (const variant of REMOVE_VARIANTS) {
+        try {
+          const payload = { ...(sendBody ? { body: bodyText } : {}), ...variant };
+          const res = await axios.put(url, payload, { headers });
+          console.log("image removed using:", variant);
+          return res;
+        } catch (err) {
+          lastError = err;
+          if (err.response?.status !== 400) throw err;
+        }
+      }
+      throw lastError;
+    }
+
+    // text only
+    const formData = new FormData();
+    formData.append("body", bodyText);
+    return axios.put(url, formData, { headers });
   }
 
   const { mutate, isPending } = useMutation({
-    mutationFn: updatePost,
+    mutationFn: savePost,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["getPosts"] });
       queryClient.invalidateQueries({ queryKey: ["getPostDetails", postId] });
-      toast.success("Post Updated Successfully", { position: "top-center", autoClose: 1000, theme: "dark" });
-      onClose(); // close modal
+      queryClient.invalidateQueries({ queryKey: ["userPosts"] });
+      queryClient.invalidateQueries({ queryKey: ["bookmarks"] });
+      toast.success("Post Updated Successfully", toastOpts);
+      onClose();
     },
-    onError: () => {
-      toast.error("Error updating post", { position: "top-center", autoClose: 1000, theme: "dark" });
+    onError: (err) => {
+      console.log("update post error:", err.response?.status, err.response?.data);
+      toast.error(err.response?.data?.message || "Error updating post", toastOpts);
     },
   });
 
-  return (
-    <Modal isOpen onOpenChange={onClose}>
-      <ModalContent>
-        <ModalHeader>Update Post</ModalHeader>
-        <ModalBody>
-          <Textarea
-            value={bodyText}
-            onChange={(e) => setBodyText(e.target.value)}
-            placeholder="What's on your mind?"
-          />
+  const canUpdate = hasChanges && hasContent && !isPending;
 
-          {imagePreview && (
-            <div className="relative w-full mt-3">
-              <img src={imagePreview} alt="preview" className="rounded-lg w-full" />
-              <IoCloseCircleOutline
-                onClick={handleClearImage}
-                className="absolute top-2 right-2 text-white cursor-pointer text-2xl"
+  return (
+    <Modal isOpen onOpenChange={(open) => !open && onClose()} size="2xl" scrollBehavior="inside">
+      <ModalContent>
+        <ModalHeader className="justify-center">Edit Post</ModalHeader>
+
+        <ModalBody>
+          <div className="rounded-xl border border-gray-200 p-4">
+            <div className="mb-3 flex items-center gap-3">
+              <img
+                src={authorPhoto}
+                alt={authorName}
+                className="h-12 w-12 rounded-full object-cover"
+                onError={(e) => {
+                  e.currentTarget.onerror = null;
+                  e.currentTarget.src = FALLBACK_AVATAR;
+                }}
               />
+              <div>
+                <p className="font-bold text-gray-800">{authorName}</p>
+                {date && <p className="text-xs text-gray-500">{date}</p>}
+              </div>
             </div>
-          )}
+
+            <textarea
+              value={bodyText}
+              onChange={(e) => setBodyText(e.target.value)}
+              placeholder="What's on your mind?"
+              rows={Math.min(Math.max(bodyText.split("\n").length, 3), 10)}
+              className="w-full resize-none rounded-lg bg-gray-50 p-3 text-base text-gray-800 outline-indigo-500"
+            />
+
+            {preview && (
+              <div className="relative mt-3">
+                <img src={preview} alt="post" className="max-h-96 w-full rounded-lg object-cover" />
+                <button
+                  type="button"
+                  onClick={handleClearImage}
+                  aria-label="Remove image"
+                  className="absolute right-2 top-2 flex h-8 w-8 items-center justify-center rounded-full bg-black/60 text-white transition hover:bg-red-500"
+                >
+                  <LuX className="text-lg" />
+                </button>
+                {newImage && (
+                  <span className="absolute bottom-2 left-2 rounded-full bg-indigo-500 px-3 py-1 text-xs font-medium text-white">
+                    New image
+                  </span>
+                )}
+              </div>
+            )}
+
+            {removeImage && !preview && (
+              <p className="mt-3 rounded-lg bg-red-50 p-3 text-sm text-red-500">
+                The image will be removed when you save.
+              </p>
+            )}
+
+            {!hasContent && (
+              <p className="mt-3 text-sm text-gray-500">
+                Add some text or an image to save this post.
+              </p>
+            )}
+          </div>
         </ModalBody>
+
         <ModalFooter className="flex items-center gap-2">
-          <label className="flex items-center gap-1 cursor-pointer">
-            <LuImagePlus className="text-blue-500 text-xl" />
-            <input type="file" hidden ref={imageInput} onChange={handleChangeImage} />
+          <label className="flex cursor-pointer items-center gap-1 text-sm text-indigo-500">
+            <LuImagePlus className="text-xl" />
+            {preview ? "Change image" : "Add image"}
+            <input type="file" accept="image/*" hidden ref={imageInput} onChange={handleChangeImage} />
           </label>
-          <Button
-            onPress={mutate}
-            className="bg-indigo-500 hover:bg-indigo-400 text-white rounded-4xl"
-            disabled={isPending}
+
+          <button
+            type="button"
+            onClick={handleReset}
+            disabled={!hasChanges || isPending}
+            className="flex flex-1 items-center gap-1 text-sm text-gray-500 hover:text-gray-800 disabled:cursor-not-allowed disabled:opacity-40"
           >
-            {isPending ? <SyncLoader color="#ffffff" size={2} speedMultiplier={1} /> : "Update"}
+            <LuRotateCcw />
+            Reset
+          </button>
+
+          <Button variant="light" onPress={onClose} className="rounded-4xl">
+            Cancel
+          </Button>
+          <Button
+            onPress={() => mutate()}
+            isDisabled={!canUpdate}
+            isLoading={isPending}
+            className="rounded-4xl bg-indigo-500 text-white hover:bg-indigo-400"
+          >
+            Save
           </Button>
         </ModalFooter>
       </ModalContent>
