@@ -1,4 +1,4 @@
-import { useParams } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import axios from "axios";
 import { useQuery } from "@tanstack/react-query";
 import LoaderScreen from "./../LoaderScreen/LoaderScreen";
@@ -30,27 +30,37 @@ export default function PostDetails() {
     }
 
     const { data, isLoading, isError } = useQuery({
-        queryKey: ["getPostDetails", id],
-        queryFn: getPostDetails,
-    });
+    queryKey: ["getPostDetails", id],
+    queryFn: getPostDetails,
+    retry: false,
+});
 
-    const { data: commentsData, isLoading: commentsLoading } = useQuery({
-        queryKey: commentsKey,
-        queryFn: getAllComments,
-    });
+const { data: commentsData, isLoading: commentsLoading } = useQuery({
+    queryKey: commentsKey,
+    queryFn: getAllComments,
+    retry: false,
+    enabled: !isError,
+});
 
     // only the first load shows the loader: a refetch must not unmount the page (and the edit modal)
     if (isLoading || commentsLoading) {
-        return <LoaderScreen />;
-    }
+    return <LoaderScreen />;
+}
 
-    if (isError || !data?.data?.post) {
-        return (
-            <p className="rounded-xl bg-white p-6 text-center text-red-500 shadow-md">
-                Could not load this post.
-            </p>
-        );
-    }
+if (isError || !data?.data?.post) {
+    return (
+        <div className="rounded-xl bg-white p-8 text-center shadow-md">
+            <p className="text-lg font-semibold text-gray-800">This post isn't available</p>
+            <p className="mt-1 text-sm text-gray-500">It may have been deleted.</p>
+            <Link
+                to="/home"
+                className="mt-5 inline-block rounded-4xl bg-indigo-500 px-6 py-3 text-sm font-medium text-white hover:bg-indigo-400"
+            >
+                Back to home
+            </Link>
+        </div>
+    );
+}
 
     const post = data.data.post;
     const { body, image, user, createdAt, commentsCount, likesCount, sharesCount } = post;

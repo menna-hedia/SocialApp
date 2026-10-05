@@ -2,7 +2,9 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
-import { LuBell, LuCheckCheck, LuHeart, LuMessageCircle, LuShare2, LuUserPlus } from "react-icons/lu";
+import {
+  LuBell, LuCheckCheck, LuHeart, LuMessageCircle, LuShare2, LuUserPlus, LuAtSign,
+} from "react-icons/lu";
 import { toast } from "react-toastify";
 import LoaderScreen from "../LoaderScreen/LoaderScreen";
 import {
@@ -28,33 +30,51 @@ function timeAgo(dateString) {
   return "just now";
 }
 
-// the field names are guesses: check them with the console.log below
-function normalize(n) {
-  const sender = n.sender || n.actor || n.from || n.user || {};
-  const type = String(n.type || n.action || "").toLowerCase();
+const getId = (v) => (v && typeof v === "object" ? v._id || v.id : v);
 
-  const postRef = n.post || n.postId || n.entityId;
-  const postId = typeof postRef === "object" ? postRef?._id : postRef;
+// types seen in the API: like_post, comment_post, follow_user, mention_user
+function normalize(n) {
+  const sender = n.actor || n.sender || n.from || n.user || {};
+  const senderId = getId(sender);
+
+  const type = String(n.type || "").toLowerCase();
+  const entityType = String(n.entityType || "").toLowerCase();
+  const isFollow = type.includes("follow");
+
+  // the post id: a direct post field first, then entityId when the entity is a post
+  const postId = isFollow
+    ? null
+    : getId(n.post) ||
+      n.postId ||
+      n.meta?.postId ||
+      n.metadata?.postId ||
+      n.data?.postId ||
+      (entityType === "post" ? n.entityId || getId(n.entity) : null);
 
   const name = sender.name || "Someone";
-  const fallbackText = {
+  const texts = {
     like: `${name} liked your post`,
     comment: `${name} commented on your post`,
+    reply: `${name} replied to your comment`,
     share: `${name} shared your post`,
     follow: `${name} started following you`,
+    mention: `${name} mentioned you`,
   };
-  const key = Object.keys(fallbackText).find((k) => type.includes(k));
+  const key = Object.keys(texts).find((k) => type.includes(k));
 
   let icon = LuBell;
   if (type.includes("like")) icon = LuHeart;
-  else if (type.includes("comment")) icon = LuMessageCircle;
+  else if (type.includes("comment") || type.includes("reply")) icon = LuMessageCircle;
   else if (type.includes("share")) icon = LuShare2;
-  else if (type.includes("follow")) icon = LuUserPlus;
+  else if (isFollow) icon = LuUserPlus;
+  else if (type.includes("mention")) icon = LuAtSign;
 
-  const to = postId
+  const to = isFollow
+    ? senderId ? `/user/${senderId}` : null
+    : postId
     ? `/postDetails/${postId}`
-    : sender._id
-    ? `/user/${sender._id}`
+    : senderId
+    ? `/user/${senderId}`
     : null;
 
   return {
@@ -64,7 +84,7 @@ function normalize(n) {
     to,
     isRead: isNotificationRead(n),
     createdAt: n.createdAt,
-    text: n.message || n.text || n.content || (key ? fallbackText[key] : `${name} sent you a notification`),
+    text: n.message || n.text || n.content || (key ? texts[key] : `${name} sent you a notification`),
   };
 }
 
@@ -74,7 +94,12 @@ export default function NotificationsPage() {
   const { data, isLoading, isError } = useNotifications();
 
   const raw = getNotificationList(data);
-  if (raw.length) console.log("first notification:", raw[0]);
+
+  // temporary: prints the mention notification as readable text
+  if (raw.length) {
+    const mention = raw.find((n) => String(n.type).includes("mention"));
+    if (mention) console.log("mention notification:\n" + JSON.stringify(mention, null, 2));
+  }
 
   const notifications = raw.map(normalize).filter((n) => n.id);
   const unreadCount = notifications.filter((n) => !n.isRead).length;
@@ -145,7 +170,7 @@ export default function NotificationsPage() {
             type="button"
             onClick={() => markAllRead()}
             disabled={unreadCount === 0 || markingAll}
-            className="inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-sm font-medium text-indigo-500 transition hover:bg-indigo-50 disabled:cursor-not-allowed "
+            className="inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-sm font-medium text-indigo-500 transition hover:bg-indigo-50 disabled:cursor-not-allowed disabled:opacity-50"
           >
             <LuCheckCheck className="text-lg" />
             Mark all as read
