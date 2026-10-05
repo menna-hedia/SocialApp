@@ -62,7 +62,8 @@ export default function RepliesSection({ postId, commentId, parentQueryKey }) {
   const { mutate: sendReply, isPending } = useMutation({
     mutationFn: () => {
       const formData = new FormData();
-      formData.append("content", content);
+      // an empty string makes the API reject the request, so we send it only when there is text
+      if (content.trim() !== "") formData.append("content", content.trim());
       if (imageFile) formData.append("image", imageFile);
       return axios.post(
         `${BASE}/posts/${postId}/comments/${commentId}/replies`,
@@ -84,7 +85,7 @@ export default function RepliesSection({ postId, commentId, parentQueryKey }) {
     },
   });
 
-  const canSend = (content.trim() !== "" || imageFile) && !isPending;
+  const canSend = content.trim() !== "" && !isPending;
 
   return (
     <div className="ms-4 mt-2 border-s-2 border-indigo-100 ps-4">
@@ -140,6 +141,7 @@ export default function RepliesSection({ postId, commentId, parentQueryKey }) {
               className="absolute right-1 top-1 flex h-6 w-6 items-center justify-center rounded-full bg-black/60 text-white hover:bg-red-500"
             >
               <LuX className="text-sm" />
+
             </button>
           </div>
         )}
@@ -159,20 +161,22 @@ export default function RepliesSection({ postId, commentId, parentQueryKey }) {
             <label className="cursor-pointer" aria-label="Add image">
               <LuImagePlus className="text-xl text-indigo-500" />
               <input type="file" accept="image/*" hidden ref={imageInput} onChange={handleChangeImage} />
+
             </label>
 
             <button
               type="button"
               disabled={!canSend}
               onClick={() => sendReply()}
-              className={`min-w-14 rounded-4xl bg-indigo-500 px-3 py-1.5 text-xs font-medium text-white hover:bg-indigo-400 ${
-                !canSend ? "cursor-not-allowed opacity-60" : ""
-              }`}
+              className={`min-w-14 rounded-4xl bg-indigo-500 px-3 py-1.5 text-xs font-medium text-white hover:bg-indigo-400 ${!canSend ? "cursor-not-allowed opacity-60" : ""
+                }`}
             >
               {isPending ? <SyncLoader color="#ffffff" size={2} /> : "Reply"}
             </button>
           </div>
-        </div>
+        </div>{imageFile && content.trim() === "" && (
+          <p className="mt-1 text-xs text-gray-500">Add a short text to send your image.</p>
+        )}
       </div>
     </div>
   );
