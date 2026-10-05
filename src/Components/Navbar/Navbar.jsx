@@ -1,6 +1,6 @@
 import React, { useContext, useEffect, useRef, useState } from "react";
 import { Link, NavLink, useNavigate } from "react-router-dom";
-import { LuHouse, LuUser, LuInfo, LuBookmark, LuBell, LuLogOut } from "react-icons/lu";
+import { LuHouse, LuUser, LuInfo, LuBookmark, LuBell, LuLogOut, LuCompass } from "react-icons/lu";
 import { authContext } from "../../context/AuthContext";
 import { profileContext } from "../../context/ProfileContext";
 import { useUnreadCount, getUnreadCount } from "../../hooks/useNotifications";
@@ -14,6 +14,7 @@ const mobileLinks = [
     { to: "/about", label: "About", icon: LuInfo },
     { to: "/bookmarks", label: "Saved", icon: LuBookmark },
     { to: "/notifications", label: "Notifications", icon: LuBell },
+    { to: "/explore", label: "Explore", icon: LuCompass },
 ];
 
 const Navbar = () => {

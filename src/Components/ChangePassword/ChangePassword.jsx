@@ -5,12 +5,11 @@ import { toast } from "react-toastify";
 import { SyncLoader } from "react-spinners";
 
 export default function ChangePassword({ onClose }) {
-
   const {
     register,
     handleSubmit,
-    formState: { errors, touchedFields },
-    getValues
+    formState: { errors },
+    getValues,
   } = useForm();
 
   const { mutate, isPending } = useMutation({
@@ -19,31 +18,50 @@ export default function ChangePassword({ onClose }) {
         "https://route-posts.routemisr.com/users/change-password",
         {
           password: data.password,
-          newPassword: data.newPassword
+          newPassword: data.newPassword,
         },
         {
           headers: {
-            token: localStorage.getItem("token")
-          }
+            token: localStorage.getItem("token"),
+          },
         }
       );
     },
     onSuccess: (res) => {
-      localStorage.setItem("token", res.data.token);
+      console.log("change-password response:", res.data);
 
-      toast.success("Password changed successfully", {
-        position: "top-right",
-        autoClose: 1000
-      });
+      // خزّن التوكن الجديد بس لو موجود (مكانه ممكن يكون res.data.token أو res.data.data.token)
+      const newToken = res.data?.token || res.data?.data?.token;
 
-      onClose();
+      if (newToken) {
+        localStorage.setItem("token", newToken);
+
+        toast.success("Password changed successfully", {
+          position: "top-right",
+          autoClose: 1000,
+        });
+
+        onClose();
+      } else {
+        // الـ API مرجعش توكن جديد: التوكن القديم غالبًا اتلغى، فنطلّع المستخدم يسجّل دخول تاني
+        toast.success("Password changed. Please login again.", {
+          position: "top-right",
+          autoClose: 1500,
+        });
+
+        localStorage.removeItem("token");
+
+        setTimeout(() => {
+          window.location.href = "/login";
+        }, 1500);
+      }
     },
     onError: (err) => {
-      toast.error(
-        err.response?.data?.message || "Error changing password",
-        { position: "top-right", autoClose: 1000 }
-      );
-    }
+      toast.error(err.response?.data?.message || "Error changing password", {
+        position: "top-right",
+        autoClose: 1000,
+      });
+    },
   });
 
   function onSubmit(data) {
@@ -51,10 +69,10 @@ export default function ChangePassword({ onClose }) {
   }
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+    <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-50">
       <div className="bg-white rounded-lg p-6 w-full max-w-md relative">
-
         <button
+          type="button"
           onClick={onClose}
           className="absolute top-2 right-2 text-red-500 text-lg"
         >
@@ -64,7 +82,6 @@ export default function ChangePassword({ onClose }) {
         <h3 className="text-lg font-bold mb-4">Change Password</h3>
 
         <form onSubmit={handleSubmit(onSubmit)}>
-
           {/* Current Password */}
           <div>
             <label htmlFor="password" className="text-sm font-medium mb-2 block">
@@ -72,14 +89,13 @@ export default function ChangePassword({ onClose }) {
             </label>
             <input
               id="password"
-              name="password"
               type="password"
               {...register("password", {
-                required: "Current password is required"
+                required: "Current password is required",
               })}
               className="bg-slate-100 w-full px-4 py-3 rounded-md outline-indigo-500"
             />
-            {errors.password && touchedFields.password && (
+            {errors.password && (
               <p className="text-red-500 text-sm mb-2">{errors.password.message}</p>
             )}
           </div>
@@ -91,18 +107,18 @@ export default function ChangePassword({ onClose }) {
             </label>
             <input
               id="newPassword"
-              name="newPassword"
               type="password"
               {...register("newPassword", {
                 required: "New password is required",
                 pattern: {
                   value: /^(?=.*[A-Z])(?=.*[a-z])(?=.*[0-9])(?=.*[#?!@$%^&*-]).{8,}$/,
-                  message: "Must include uppercase, number & special char"
-                }
+                  message:
+                    "Must be 8+ chars with uppercase, lowercase, number & special char",
+                },
               })}
               className="bg-slate-100 w-full px-4 py-3 rounded-md outline-indigo-500"
             />
-            {errors.newPassword && touchedFields.newPassword && (
+            {errors.newPassword && (
               <p className="text-red-500 text-sm mb-2">{errors.newPassword.message}</p>
             )}
           </div>
@@ -114,12 +130,12 @@ export default function ChangePassword({ onClose }) {
             </label>
             <input
               id="confirmPassword"
-              name="confirmPassword"
               type="password"
               {...register("confirmPassword", {
                 required: "Confirm your password",
+                deps: ["newPassword"],
                 validate: (value) =>
-                  value === getValues("newPassword") || "Passwords do not match"
+                  value === getValues("newPassword") || "Passwords do not match",
               })}
               className="bg-slate-100 w-full px-4 py-3 rounded-md outline-indigo-500"
             />
@@ -132,11 +148,10 @@ export default function ChangePassword({ onClose }) {
           <button
             type="submit"
             disabled={isPending}
-            className="mt-5 mx-auto block min-w-32 py-3 px-6 text-sm font-medium rounded-4xl text-white bg-indigo-500 hover:bg-indigo-400 flex justify-center"
+            className="mt-5 mx-auto flex min-w-32 justify-center py-3 px-6 text-sm font-medium rounded-4xl text-white bg-indigo-500 hover:bg-indigo-400 disabled:opacity-60"
           >
             {isPending ? <SyncLoader color="#fff" size={5} /> : "Update Password"}
           </button>
-
         </form>
       </div>
     </div>
