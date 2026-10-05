@@ -46,7 +46,7 @@ export default function CommentCard({ commentDetails, commentId, postId, queryKe
         onError: (err, _vars, previous) => {
             setLiked(previous.liked);
             setLikes(previous.likes);
-            toast.error("Could not update like", { position: "top-center", autoClose: 1000, theme: "dark" });
+            toast.error("Could not update like", { position: "top-right", autoClose: 1000 });
         },
     });
 

@@ -10,7 +10,7 @@ import { toast } from "react-toastify";
 import { profileContext } from "../../context/ProfileContext";
 import LoaderScreen from "../LoaderScreen/LoaderScreen";
 
-const toastOptions = { position: "top-center", autoClose: 1000, theme: "dark" };
+const toastOptions = { position: "top-right", autoClose: 1000 };
 
 export default function PostCreation({ compact = false, asButton = false }) {
   const { isOpen, onOpen, onOpenChange, onClose } = useDisclosure();

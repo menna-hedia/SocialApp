@@ -43,15 +43,14 @@ export default function CommentCreation({ inputStyle, queryKey, postId }) {
       setCommentValue("");
       handleClearImage();
       toast.success("Comment Created Successfully", {
-        position: "top-center",
+        position: "top-right",
         autoClose: 1000,
-        theme: "dark",
       });
     },
     onError: (err) => {
       toast.error(
         err.response?.data?.message || err.message || "Error occurred ... try again later",
-        { position: "top-center", autoClose: 1500, theme: "dark" }
+        { position: "top-right", autoClose: 1000 }
       );
     },
   });

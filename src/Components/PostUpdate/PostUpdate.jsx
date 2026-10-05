@@ -11,7 +11,7 @@ import SharedPost from "../SharedPost/SharedPost";
 import { getOriginalPost } from "../../utils/getOriginalPost";
 
 const FALLBACK_AVATAR = "https://avatars.githubusercontent.com/u/86160567?s=200&v=4";
-const toastOpts = { position: "top-center", autoClose: 1500, theme: "dark" };
+const toastOpts = { position: "top-right", autoClose: 1000 };
 
 // the docs don't say how to delete an image, so we try these in order
 const REMOVE_VARIANTS = [

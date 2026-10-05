@@ -10,7 +10,7 @@ import { toast } from "react-toastify";
 
 const BASE = "https://route-posts.routemisr.com";
 const FALLBACK_AVATAR = "https://avatars.githubusercontent.com/u/86160567?s=200&v=4";
-const toastOpts = { position: "top-center", autoClose: 1200, theme: "dark" };
+const toastOpts = { position: "top-right", autoClose: 1000 };
 
 export default function ShareModal({ postId, isOpen, onOpenChange, onShared }) {
   const queryClient = useQueryClient();

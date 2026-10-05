@@ -9,7 +9,7 @@ import { extractList } from "../../utils/extractList";
 const BASE = "https://route-posts.routemisr.com";
 const authHeaders = () => ({ headers: { token: localStorage.getItem("token") } });
 const FALLBACK_AVATAR = "https://avatars.githubusercontent.com/u/86160567?s=200&v=4";
-const toastOpts = { position: "top-center", autoClose: 1200, theme: "dark" };
+const toastOpts = { position: "top-right", autoClose: 1000 };
 
 // highlights @mentions inside a reply
 function renderContent(text = "") {

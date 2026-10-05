@@ -8,7 +8,7 @@ import { profileContext } from "../../context/ProfileContext";
 
 const FALLBACK_AVATAR = "https://avatars.githubusercontent.com/u/86160567?s=200&v=4";
 const MAX_SIZE_MB = 5;
-const toastOpts = { position: "top-center", autoClose: 1500, theme: "dark" };
+const toastOpts = { position: "top-right", autoClose: 1000 };
 
 export default function ProfilePhotoUpload({ photo }) {
   const queryClient = useQueryClient();

@@ -10,7 +10,7 @@ import { useBookmarks, getBookmarkedPosts } from "../../hooks/useBookmarks";
 
 const BASE = "https://route-posts.routemisr.com";
 const authHeaders = () => ({ headers: { token: localStorage.getItem("token") } });
-const toastOpts = { position: "top-center", autoClose: 1000, theme: "dark" };
+const toastOpts = { position: "top-right", autoClose: 1000 };
 
 export default function PostActions({
   postId,

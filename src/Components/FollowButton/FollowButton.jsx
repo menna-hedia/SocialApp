@@ -68,14 +68,14 @@ export default function FollowButton({ userId, initialFollowing, size = "sm", ic
       saveFollowed(myId, userId, next);
       queryClient.invalidateQueries({ queryKey: ["userProfile", userId] });
       toast.success(res.data?.message || (next ? "Followed" : "Unfollowed"), {
-        position: "top-center", autoClose: 1000, theme: "dark",
+        position: "top-right", autoClose: 1000,
       });
     },
 
     onError: (err, _vars, context) => {
       queryClient.setQueryData(stateKey, context?.previous ?? false);
       toast.error(err.response?.data?.message || "Error occurred ... try again later", {
-        position: "top-center", autoClose: 1500, theme: "dark",
+        position: "top-right", autoClose: 1000,
       });
     },
   });

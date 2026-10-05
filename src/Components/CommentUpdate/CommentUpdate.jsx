@@ -58,12 +58,12 @@ export default function CommentUpdate({ postId, commentId, initialContent, initi
       queryClient.invalidateQueries({ queryKey: ["getComments", postId] });
       queryClient.invalidateQueries({ queryKey });
       queryClient.invalidateQueries({ queryKey: ["getPosts"] });
-      toast.success("Comment Updated Successfully", { position: "top-center", autoClose: 1000, theme: "dark" });
+      toast.success("Comment Updated Successfully", { position: "top-right", autoClose: 1000 });
       onClose();
     },
     onError: (err) => {
       toast.error(err.response?.data?.message || err.message || "Error occurred ... try again later",
-        { position: "top-center", autoClose: 2000, theme: "dark" });
+        { position: "top-right", autoClose: 1000 });
     },
   });
 

@@ -32,9 +32,8 @@ export default function ChangePassword({ onClose }) {
       localStorage.setItem("token", res.data.token);
 
       toast.success("Password changed successfully", {
-        position: "top-center",
-        autoClose: 1000,
-        theme: "dark"
+        position: "top-right",
+        autoClose: 1000
       });
 
       onClose();
@@ -42,7 +41,7 @@ export default function ChangePassword({ onClose }) {
     onError: (err) => {
       toast.error(
         err.response?.data?.message || "Error changing password",
-        { position: "top-center", autoClose: 1500, theme: "dark" }
+        { position: "top-right", autoClose: 1000 }
       );
     }
   });

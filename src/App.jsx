@@ -50,8 +50,8 @@ const App = () => {
             <ProfileContextProvider>
               <RouterProvider router={router} />
               <ToastContainer
-  position="top-center"
-  autoClose={1500}
+  position="top-right"
+  autoClose={1000}
   limit={3}
   newestOnTop
   pauseOnFocusLoss={false}

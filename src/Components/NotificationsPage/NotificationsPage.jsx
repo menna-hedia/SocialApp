@@ -115,12 +115,12 @@ export default function NotificationsPage() {
     onSuccess: () => {
       refreshNotifications();
       toast.success("All notifications marked as read", {
-        position: "top-center", autoClose: 1000, theme: "dark",
+        position: "top-right", autoClose: 1000,
       });
     },
     onError: (err) => {
       toast.error(err.response?.data?.message || "Could not update notifications", {
-        position: "top-center", autoClose: 1500, theme: "dark",
+        position: "top-right", autoClose: 1000,
       });
     },
   });

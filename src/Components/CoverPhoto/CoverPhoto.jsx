@@ -7,7 +7,7 @@ import { toast } from "react-toastify";
 import { profileContext } from "../../context/ProfileContext";
 
 const MAX_SIZE_MB = 5;
-const toastOpts = { position: "top-center", autoClose: 1500, theme: "dark" };
+const toastOpts = { position: "top-right", autoClose: 1000 };
 
 // shows the cover image, or a gradient placeholder when there is none.
 // pass `editable` on your own profile to show the upload button.

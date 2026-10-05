@@ -42,11 +42,11 @@ export default function CardHeader({ photo, name, description, style, userId, po
             queryClient.invalidateQueries({ queryKey: ["userPosts"] });
             if (queryKey) queryClient.invalidateQueries({ queryKey });
 
-            toast.success(`${cardType} Deleted Successfully`, { position: "top-center", autoClose: 1000, theme: "dark" });
+            toast.success(`${cardType} Deleted Successfully`, { position: "top-right", autoClose: 1000 });
             if (postId && !commentId) navigate("/home");
         },
         onError: () => {
-            toast.error("Error occurred ... try again later", { position: "top-center", autoClose: 1000, theme: "dark" });
+            toast.error("Error occurred ... try again later", { position: "top-right", autoClose: 1000 });
         },
     });
 
