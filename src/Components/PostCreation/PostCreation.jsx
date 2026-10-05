@@ -57,14 +57,15 @@ export default function PostCreation({ compact = false, asButton = false }) {
   const { isPending, mutate } = useMutation({
     mutationFn: () => {
       const postObj = new FormData();
-      postObj.append("body", caption);
+      const text = caption.trim();
+
+      if (text) postObj.append("body", text);
       if (imageFile) postObj.append("image", imageFile);
 
       return axios.post("https://route-posts.routemisr.com/posts", postObj, {
         headers: { token: localStorage.getItem("token") },
       });
-    },
-    onSuccess: () => {
+    }, ccess: () => {
       handleClose();
       queryClient.invalidateQueries({ queryKey: ["getPosts"] });
       queryClient.invalidateQueries({ queryKey: ["userPosts"] });

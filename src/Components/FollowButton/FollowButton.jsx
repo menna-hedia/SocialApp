@@ -1,4 +1,4 @@
-import { useContext } from "react";
+import { useContext, useEffect } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 import { FaUserPlus, FaUserCheck } from "react-icons/fa";
@@ -28,13 +28,11 @@ function saveFollowed(myId, userId, value) {
 export default function FollowButton({ userId, initialFollowing, size = "sm", iconOnly = false }) {
   const queryClient = useQueryClient();
   const { userId: myId } = useContext(authContext) || {};
-  const stateKey = ["followState", userId];
+  const stateKey = ["followState", myId, userId]; // myId in the key fixes the early-null race
 
   // the server value wins when the API sends one, otherwise use what this browser remembers
-  const startValue =
-    typeof initialFollowing === "boolean"
-      ? initialFollowing
-      : Boolean(readFollowed(myId)[userId]);
+  const serverValue = typeof initialFollowing === "boolean" ? initialFollowing : undefined;
+  const startValue = serverValue ?? Boolean(readFollowed(myId)[userId]);
 
   const { data: isFollowing } = useQuery({
     queryKey: stateKey,
@@ -43,6 +41,13 @@ export default function FollowButton({ userId, initialFollowing, size = "sm", ic
     staleTime: Infinity,
     gcTime: Infinity,
   });
+
+  // keep the cached state in sync when the server sends a fresh value
+  useEffect(() => {
+    if (serverValue !== undefined) queryClient.setQueryData(stateKey, serverValue);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [serverValue, myId, userId]);
+
 
   const { mutate, isPending } = useMutation({
     mutationFn: () =>

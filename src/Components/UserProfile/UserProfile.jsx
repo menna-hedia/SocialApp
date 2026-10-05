@@ -1,11 +1,14 @@
 import { Navigate, useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
-import { useContext } from "react";
+import { useContext, useState } from "react";
 import { authContext } from "../../context/AuthContext";
 import LoaderScreen from "../LoaderScreen/LoaderScreen";
 import FollowButton from "../FollowButton/FollowButton";
 import PostCard from "../PostCard/PostCard";
+import CoverPhoto from "../CoverPhoto/CoverPhoto";
+import ProfileStats from "../ProfileStats/ProfileStats";
+import FollowListModal from "../FollowListModal/FollowListModal";
 
 const BASE = "https://route-posts.routemisr.com";
 const authHeaders = () => ({ headers: { token: localStorage.getItem("token") } });
@@ -15,6 +18,7 @@ export default function UserProfile() {
   const { userId } = useParams();
   const { userId: myId } = useContext(authContext);
   const isMe = userId === myId;
+  const [listType, setListType] = useState(null); // "followers" | "following" | null
 
   const { data: profileData, isLoading, isError } = useQuery({
     queryKey: ["userProfile", userId],
@@ -50,18 +54,19 @@ export default function UserProfile() {
     followersCount = 0,
     followingCount = 0,
     isFollowing,
+    followers = [],
+    following = [],
   } = user;
   const posts = postsData?.data?.posts || [];
+const idOf = (u) => (typeof u === "string" ? u : u?._id);
+const followedByMe = Array.isArray(followers) && followers.some((f) => idOf(f) === myId);
+const initialFollowing = typeof isFollowing === "boolean" ? isFollowing || followedByMe : followedByMe || undefined;
 
   return (
     <div className="w-full pb-10">
       {/* profile info: fills the full width next to the sidebar */}
       <div className="mb-6 w-full rounded-xl bg-white p-6 shadow-md">
-        {cover && (
-          <div className="mb-4 h-56 w-full">
-            <img src={cover} alt="Cover" className="h-full w-full rounded-xl object-cover" />
-          </div>
-        )}
+        <CoverPhoto cover={cover} />
 
         <div className="flex flex-wrap items-center gap-6">
           <img
@@ -85,30 +90,26 @@ export default function UserProfile() {
           </div>
 
           <div className="ms-auto">
-            <FollowButton
-              userId={userId}
-              initialFollowing={typeof isFollowing === "boolean" ? isFollowing : undefined}
-              size="lg"
-            />
+            <FollowButton userId={userId} initialFollowing={initialFollowing} size="lg" />
           </div>
         </div>
 
         {/* stats */}
-        <div className="mt-6 grid grid-cols-3 gap-4 rounded-xl bg-gray-100 p-4 text-center">
-          <div>
-            <p className="font-bold">{posts.length}</p>
-            <p className="text-gray-500">Posts</p>
-          </div>
-          <div>
-            <p className="font-bold">{followersCount}</p>
-            <p className="text-gray-500">Followers</p>
-          </div>
-          <div>
-            <p className="font-bold">{followingCount}</p>
-            <p className="text-gray-500">Following</p>
-          </div>
-        </div>
+        <ProfileStats
+          className="grid-cols-3"
+          items={[
+            { label: "Posts", value: posts.length },
+            { label: "Followers", value: followersCount, onClick: () => setListType("followers") },
+            { label: "Following", value: followingCount, onClick: () => setListType("following") },
+          ]}
+        />
       </div>
+
+      <FollowListModal
+        type={listType}
+        users={listType === "followers" ? followers : following}
+        onClose={() => setListType(null)}
+      />
 
       {/* posts */}
       {postsLoading && <LoaderScreen />}

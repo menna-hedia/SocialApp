@@ -8,6 +8,9 @@ import ChangePassword from "../ChangePassword/ChangePassword";
 import PostCard from "../PostCard/PostCard";
 import PostCreation from "../PostCreation/PostCreation";
 import ProfilePhotoUpload from "../ProfilePhotoUpload/ProfilePhotoUpload";
+import CoverPhoto from "../CoverPhoto/CoverPhoto";
+import ProfileStats from "../ProfileStats/ProfileStats";
+import FollowListModal from "../FollowListModal/FollowListModal";
 
 function formatDate(value) {
   if (!value) return "-";
@@ -20,6 +23,7 @@ export default function ProfilePage() {
   const { userId } = useContext(authContext);
 
   const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [listType, setListType] = useState(null); // "followers" | "following" | null
 
   // hooks must run before any early return
   const { data: postsData, isLoading: postsLoading } = useQuery({
@@ -48,26 +52,28 @@ export default function ProfilePage() {
     followersCount = 0,
     followingCount = 0,
     bookmarksCount = 0,
+    followers = [],
+    following = [],
   } = profile;
 
   const posts = postsData?.data?.posts || [];
 
   const stats = [
-    { label: "Posts", value: posts.length },
-    { label: "Followers", value: followersCount },
-    { label: "Following", value: followingCount },
-    { label: "Saved", value: bookmarksCount },
+    {
+      label: "Posts",
+      value: posts.length,
+      onClick: () => document.getElementById("my-posts")?.scrollIntoView({ behavior: "smooth" }),
+    },
+    { label: "Followers", value: followersCount, onClick: () => setListType("followers") },
+    { label: "Following", value: followingCount, onClick: () => setListType("following") },
+    { label: "Saved", value: bookmarksCount, to: "/bookmarks" },
   ];
 
   return (
     <div className="w-full pb-10">
       {/* profile info */}
       <div className="mb-6 w-full overflow-hidden rounded-xl bg-white p-4 shadow-md sm:p-6">
-        {cover && (
-          <div className="mb-4 h-36 w-full sm:h-48 lg:h-56">
-            <img src={cover} alt="Cover" className="h-full w-full rounded-xl object-cover" />
-          </div>
-        )}
+        <CoverPhoto cover={cover} editable />
 
         {/* stacked and centered on mobile, side by side from sm and up */}
         <div className="flex flex-col items-center gap-5 text-center sm:flex-row sm:items-center sm:text-start">
@@ -97,23 +103,21 @@ export default function ProfilePage() {
         )}
 
         {/* stats */}
-        <div className="mt-6 grid grid-cols-2 gap-3 rounded-xl bg-gray-100 p-3 text-center sm:grid-cols-4 sm:gap-4 sm:p-4">
-          {stats.map(({ label, value }) => (
-            <div key={label} className="rounded-lg bg-white/60 py-2 sm:bg-transparent">
-              <p className="text-lg font-bold">{value}</p>
-              <p className="text-sm text-gray-500">{label}</p>
-            </div>
-          ))}
-        </div>
+        <ProfileStats items={stats} className="grid-cols-2 sm:grid-cols-4" />
       </div>
 
-{/* my posts header + add post */}
-<div className="mb-4 flex items-center justify-between gap-3">
-  <h3 className="text-lg font-bold text-gray-900">
-    My Posts <span className="text-gray-400">({posts.length})</span>
-  </h3>
+      <FollowListModal
+        type={listType}
+        users={listType === "followers" ? followers : following}
+        onClose={() => setListType(null)}
+      />
 
-</div>
+      {/* my posts header + add post */}
+      <div id="my-posts" className="mb-4 flex scroll-mt-24 items-center justify-between gap-3">
+        <h3 className="text-lg font-bold text-gray-900">
+          My Posts <span className="text-gray-400">({posts.length})</span>
+        </h3>
+      </div>
 
       {postsLoading && <LoaderScreen />}
 
@@ -128,7 +132,6 @@ export default function ProfilePage() {
           <PostCard key={post._id} postInfo={post} queryKey={["userPosts", userId]} compact />
         ))}
       </div>
-      
     </div>
   );
 }

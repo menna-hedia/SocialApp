@@ -84,7 +84,11 @@ export default function FollowSuggestions() {
                 </div>
               </Link>
 
-              <FollowButton userId={id} initialFollowing={Boolean(user.isFollowing)} size="lg" />
+              <FollowButton
+                userId={id}
+                initialFollowing={typeof user.isFollowing === "boolean" ? user.isFollowing : undefined}
+                size="lg"
+              />
             </div>
           );
         })}
