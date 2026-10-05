@@ -1,17 +1,17 @@
-import { Link, useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import axios from "axios";
 import { useQuery } from "@tanstack/react-query";
 import LoaderScreen from "./../LoaderScreen/LoaderScreen";
 import CardHeader from "./../CardHeader/CardHeader";
 import CommentCard from "./../CommentCard/CommentCard";
-import CommentCreation from './../CommentCreation/CommentCreation';
+import CommentCreation from "./../CommentCreation/CommentCreation";
 import PostActions from "../PostActions/PostActions";
+import SharedPost from "../SharedPost/SharedPost";
+import { getOriginalPost } from "../../utils/getOriginalPost";
 
-
-export default function PostDetails({ queryKey }) {
-
-
+export default function PostDetails() {
     const { id } = useParams();
+    const commentsKey = ["getComments", id];
 
     function getPostDetails() {
         return axios
@@ -29,70 +29,86 @@ export default function PostDetails({ queryKey }) {
             .then((response) => response.data);
     }
 
-    const { data, isLoading, isFetching } = useQuery({
+    const { data, isLoading, isError } = useQuery({
         queryKey: ["getPostDetails", id],
         queryFn: getPostDetails,
-        // getAllComments,
     });
 
     const { data: commentsData, isLoading: commentsLoading } = useQuery({
-        queryKey:[ queryKey],
+        queryKey: commentsKey,
         queryFn: getAllComments,
     });
 
-    if (isLoading || isFetching || commentsLoading) {
-        return <LoaderScreen></LoaderScreen>;
+    // only the first load shows the loader: a refetch must not unmount the page (and the edit modal)
+    if (isLoading || commentsLoading) {
+        return <LoaderScreen />;
     }
 
-    const { body, image, user, createdAt, commentsCount, likesCount, sharesCount } = data.data.post;
-    const { photo, name , _id } = user;
+    if (isError || !data?.data?.post) {
+        return (
+            <p className="rounded-xl bg-white p-6 text-center text-red-500 shadow-md">
+                Could not load this post.
+            </p>
+        );
+    }
+
+    const post = data.data.post;
+    const { body, image, user, createdAt, commentsCount, likesCount, sharesCount } = post;
+    const { photo, name, _id } = user || {};
     const comments = commentsData?.data?.comments || [];
+    const original = getOriginalPost(post);
 
     return (
-        <>
-            <div className="flex flex-col items-start mx-auto bg-white p-10 rounded-xl md:max-w-300">
-                {/* profile & options  */}
-              
-                    <CardHeader
-    cardType="post"
-    photo={photo}
-    name={name}
-    description={createdAt.split("T")[0]}
-    style={"w-18 h-18"}
-    userId={_id}
-    postId={id}
-/>
-    
+        <div className="mx-auto flex w-full flex-col items-start rounded-xl bg-white p-6 shadow-md md:p-10">
+            {/* profile & options */}
+            <CardHeader
+                cardType="post"
+                photo={photo}
+                name={name}
+                description={createdAt?.split("T")[0]}
+                style={"w-18 h-18"}
+                userId={_id}
+                postId={id}
+                body={body}
+                image={image}
+            />
 
-                {/* post contents  */}
-                <div className="flex flex-col md:flex-row md:justify-start items-start md:items-start w-full">
-                    {image && (
-                        <div className=" max-w-xl max-sm:max-w-lg">
-                            <img className="rounded-xl block" src={image} alt={body} />
-                        </div>
-                    )}
-
-                    <div className="m-6 flex flex-col justify-center md:p-4 w-full">
-                        <p className=" text-xl">{body}</p>
-
-                        <CommentCreation inputStyle={"my-6 bg-gray-100"} buttonStyle={" end-3 bottom-8 "} postId={id} queryKey={queryKey} />
-
-                        <PostActions
-    postId={id}
-    likesCount={likesCount}
-    commentsCount={commentsCount}
-    sharesCount={sharesCount}
-    isDetails
-/>
-
-                        {comments.map((comment) => (
-                            <div className=" mt-6 bg-gray-100 rounded-xl p-2 block w-100" key={comment._id}  >
-                                <CommentCard commentDetails={comment} commentId={comment._id} postId={id}/>
-                            </div>
-                        ))}
+            {/* post contents */}
+            <div className="flex w-full flex-col items-start md:flex-row md:justify-start">
+                {image && (
+                    <div className="max-w-xl max-sm:max-w-lg">
+                        <img className="block rounded-xl" src={image} alt={body} />
                     </div>
+                )}
+
+                <div className="flex w-full min-w-0 flex-col justify-center md:m-6 md:p-4">
+                    {body && <p className="break-words text-xl">{body}</p>}
+
+                    {/* the original post, when this one is a share */}
+                    <SharedPost original={original} />
+
+                    <CommentCreation inputStyle={"my-6 bg-gray-100"} postId={id} queryKey={commentsKey} />
+
+                    <PostActions
+                        postId={id}
+                        likesCount={likesCount}
+                        commentsCount={commentsCount}
+                        sharesCount={sharesCount}
+                        commentsQueryKey={commentsKey}
+                    />
+
+                    {comments.map((comment) => (
+                        <div className="mt-6 block w-full rounded-xl bg-gray-100 p-2" key={comment._id}>
+                            <CommentCard
+                                commentDetails={comment}
+                                commentId={comment._id}
+                                postId={id}
+                                queryKey={commentsKey}
+                            />
+                        </div>
+                    ))}
                 </div>
             </div>
-        </>
+        </div>
     );
 }
