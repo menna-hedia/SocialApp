@@ -5,14 +5,14 @@ import {
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 import { useContext, useRef, useState } from "react";
-import { LuImagePlus, LuX } from "react-icons/lu";
+import { LuImagePlus, LuX, LuPlus } from "react-icons/lu";
 import { toast } from "react-toastify";
 import { profileContext } from "../../context/ProfileContext";
 import LoaderScreen from "../LoaderScreen/LoaderScreen";
 
 const toastOptions = { position: "top-center", autoClose: 1000, theme: "dark" };
 
-export default function PostCreation({ compact = false }) {
+export default function PostCreation({ compact = false, asButton = false }) {
   const { isOpen, onOpen, onOpenChange, onClose } = useDisclosure();
 
   const [caption, setCaption] = useState("");
@@ -82,7 +82,17 @@ export default function PostCreation({ compact = false }) {
 
   return (
     <>
-      {compact ? (
+      {asButton ? (
+        <button
+          type="button"
+          onClick={onOpen}
+          aria-label="Add post"
+          title="Add post"
+          className="flex h-11 w-11 items-center justify-center rounded-full bg-indigo-500 text-white shadow-md transition hover:bg-indigo-400 active:scale-95"
+        >
+          <LuPlus className="text-2xl" />
+        </button>
+      ) : compact ? (
         profile && (
           <div
             onClick={onOpen}

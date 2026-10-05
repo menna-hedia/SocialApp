@@ -89,6 +89,7 @@ export default function ProfilePage() {
           >
             Change Password
           </button>
+          <PostCreation asButton />
         </div>
 
         {showPasswordModal && (
@@ -106,13 +107,13 @@ export default function ProfilePage() {
         </div>
       </div>
 
-      {/* my posts header + add post */}
-      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-        <h3 className="text-lg font-bold text-white">
-          My Posts <span className="text-gray-400">({posts.length})</span>
-        </h3>
-        <PostCreation asButton />
-      </div>
+{/* my posts header + add post */}
+<div className="mb-4 flex items-center justify-between gap-3">
+  <h3 className="text-lg font-bold text-gray-900">
+    My Posts <span className="text-gray-400">({posts.length})</span>
+  </h3>
+
+</div>
 
       {postsLoading && <LoaderScreen />}
 
@@ -127,6 +128,7 @@ export default function ProfilePage() {
           <PostCard key={post._id} postInfo={post} queryKey={["userPosts", userId]} compact />
         ))}
       </div>
+      
     </div>
   );
 }
