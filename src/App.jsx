@@ -49,7 +49,14 @@ const App = () => {
           <AuthContextProvider>
             <ProfileContextProvider>
               <RouterProvider router={router} />
-              <ToastContainer />
+              <ToastContainer
+  position="top-center"
+  autoClose={1500}
+  limit={3}
+  newestOnTop
+  pauseOnFocusLoss={false}
+  theme="light"
+/>
             </ProfileContextProvider>
           </AuthContextProvider>
         </HeroUIProvider>
