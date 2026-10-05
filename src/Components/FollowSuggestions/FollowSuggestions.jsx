@@ -45,8 +45,6 @@ export default function FollowSuggestions() {
         .then((res) => res.data),
   });
 
-  console.log("suggestions:", data, error?.response?.data);
-
   const suggestions = extractList(data);
   const visible = showAll ? suggestions : suggestions.slice(0, INITIAL_COUNT);
 

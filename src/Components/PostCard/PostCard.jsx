@@ -21,9 +21,6 @@ export default function PostCard({ postInfo, queryKey, compact = false }) {
 
     const original = getOriginalPost(postInfo);
 
-    // temporary: remove after you find the real field name
-    console.log("post keys:", Object.keys(postInfo), postInfo);
-
     if (compact) {
         return (
             <div className="flex aspect-square w-full flex-col overflow-hidden rounded-xl bg-white p-4 shadow-lg">

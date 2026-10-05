@@ -61,7 +61,6 @@ export default function PostActions({
       toast.success(context?.previous ? "Removed from saved" : "Post saved", toastOpts);
     },
     onError: (err, _vars, context) => {
-      console.log("bookmark error:", err.response?.status, err.response?.data);
       setSavedOverride(context?.previous ?? null);
       toast.error(err.response?.data?.message || "Could not save post", toastOpts);
     },

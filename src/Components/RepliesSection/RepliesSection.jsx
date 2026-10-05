@@ -43,7 +43,7 @@ export default function RepliesSection({ postId, commentId, parentQueryKey }) {
   });
 
   const replies = extractList(data);
-  if (replies.length) console.log("first reply:", replies[0]);
+  
 
   function handleChangeImage(e) {
     const file = e.target.files?.[0];

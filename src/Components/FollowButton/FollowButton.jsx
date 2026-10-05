@@ -68,7 +68,6 @@ export default function FollowButton({ userId, initialFollowing, size = "sm", ic
     },
 
     onError: (err, _vars, context) => {
-      console.log("follow error:", err.response?.status, err.response?.data);
       queryClient.setQueryData(stateKey, context?.previous ?? false);
       toast.error(err.response?.data?.message || "Error occurred ... try again later", {
         position: "top-center", autoClose: 1500, theme: "dark",

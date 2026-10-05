@@ -41,7 +41,6 @@ export default function PostUpdate({ postId, initialBody, initialImage, authorPh
   });
 
   const post = data?.data?.post;
-  if (post) console.log("editing post:", post);
 
   if (isLoading) {
     return (
@@ -138,7 +137,6 @@ function PostUpdateForm({ postId, body, image, original, isShare, authorPhoto, a
         try {
           const payload = { ...(sendBody ? { body: bodyText } : {}), ...variant };
           const res = await axios.put(url, payload, { headers });
-          console.log("image removed using:", variant);
           return res;
         } catch (err) {
           lastError = err;
@@ -165,7 +163,6 @@ function PostUpdateForm({ postId, body, image, original, isShare, authorPhoto, a
       onClose();
     },
     onError: (err) => {
-      console.log("update post error:", err.response?.status, err.response?.data);
       toast.error(err.response?.data?.message || "Error updating post", toastOpts);
     },
   });

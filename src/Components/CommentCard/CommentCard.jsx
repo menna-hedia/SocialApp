@@ -20,7 +20,6 @@ export default function CommentCard({ commentDetails, commentId, postId, queryKe
     // the count field name is a guess
     const repliesCount = comment?.repliesCount ?? comment?.replies?.length;
 
-    // field names are guesses: check them with console.log(comment)
     const initialLiked = Boolean(
         comment?.isLiked ??
         comment?.liked ??
@@ -45,7 +44,6 @@ export default function CommentCard({ commentDetails, commentId, postId, queryKe
             return previous;
         },
         onError: (err, _vars, previous) => {
-            console.log("comment like error:", err.response?.status, err.response?.data);
             setLiked(previous.liked);
             setLikes(previous.likes);
             toast.error("Could not update like", { position: "top-center", autoClose: 1000, theme: "dark" });

@@ -95,12 +95,6 @@ export default function NotificationsPage() {
 
   const raw = getNotificationList(data);
 
-  // temporary: prints the mention notification as readable text
-  if (raw.length) {
-    const mention = raw.find((n) => String(n.type).includes("mention"));
-    if (mention) console.log("mention notification:\n" + JSON.stringify(mention, null, 2));
-  }
-
   const notifications = raw.map(normalize).filter((n) => n.id);
   const unreadCount = notifications.filter((n) => !n.isRead).length;
   const visible = tab === "unread" ? notifications.filter((n) => !n.isRead) : notifications;
@@ -125,7 +119,6 @@ export default function NotificationsPage() {
       });
     },
     onError: (err) => {
-      console.log("read-all error:", err.response?.status, err.response?.data);
       toast.error(err.response?.data?.message || "Could not update notifications", {
         position: "top-center", autoClose: 1500, theme: "dark",
       });

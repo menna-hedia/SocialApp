@@ -50,7 +50,6 @@ export default function ShareModal({ postId, isOpen, onOpenChange, onShared }) {
       toast.success("Post shared", toastOpts);
     },
     onError: (err) => {
-      console.log("share error:", err.response?.status, err.response?.data);
       toast.error(err.response?.data?.message || "Could not share post", toastOpts);
     },
   });

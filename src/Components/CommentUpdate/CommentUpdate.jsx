@@ -62,7 +62,6 @@ export default function CommentUpdate({ postId, commentId, initialContent, initi
       onClose();
     },
     onError: (err) => {
-      console.log(err.response?.data);
       toast.error(err.response?.data?.message || err.message || "Error occurred ... try again later",
         { position: "top-center", autoClose: 2000, theme: "dark" });
     },

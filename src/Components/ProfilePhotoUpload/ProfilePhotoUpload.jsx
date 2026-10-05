@@ -41,7 +41,6 @@ export default function ProfilePhotoUpload({ photo }) {
       queryClient.invalidateQueries({ queryKey: ["userPosts"] });
     },
     onError: (err) => {
-      console.log("upload photo error:", err.response?.status, err.response?.data);
       setPreview(null);
       toast.error(err.response?.data?.message || "Could not upload photo", toastOpts);
     },

@@ -49,7 +49,6 @@ export default function CommentCreation({ inputStyle, queryKey, postId }) {
       });
     },
     onError: (err) => {
-      console.log(err.response?.data); // check the real error in the console
       toast.error(
         err.response?.data?.message || err.message || "Error occurred ... try again later",
         { position: "top-center", autoClose: 1500, theme: "dark" }
