@@ -25,7 +25,7 @@ function saveFollowed(myId, userId, value) {
   }
 }
 
-export default function FollowButton({ userId, initialFollowing, size = "sm" }) {
+export default function FollowButton({ userId, initialFollowing, size = "sm", iconOnly = false }) {
   const queryClient = useQueryClient();
   const { userId: myId } = useContext(authContext) || {};
   const stateKey = ["followState", userId];
@@ -59,11 +59,10 @@ export default function FollowButton({ userId, initialFollowing, size = "sm" }) 
     },
 
     onSuccess: (res) => {
-      console.log("follow response:", res.data);
       const next = queryClient.getQueryData(stateKey);
       saveFollowed(myId, userId, next);
       queryClient.invalidateQueries({ queryKey: ["userProfile", userId] });
-      toast.success(res.data?.message || "Done", {
+      toast.success(res.data?.message || (next ? "Followed" : "Unfollowed"), {
         position: "top-center", autoClose: 1000, theme: "dark",
       });
     },
@@ -77,6 +76,29 @@ export default function FollowButton({ userId, initialFollowing, size = "sm" }) 
     },
   });
 
+  const label = isFollowing ? "Following" : "Follow";
+  const stateClasses = isFollowing
+    ? "bg-gray-200 text-gray-700 hover:bg-gray-300"
+    : "bg-indigo-500 text-white hover:bg-indigo-400";
+  const pendingClasses = isPending ? "cursor-not-allowed opacity-50" : "";
+
+  // icon only: a round button (used inside post cards)
+  if (iconOnly) {
+    return (
+      <button
+        type="button"
+        onClick={() => mutate()}
+        disabled={isPending}
+        aria-label={label}
+        title={label}
+        className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-base transition ${stateClasses} ${pendingClasses}`}
+      >
+        {isFollowing ? <FaUserCheck /> : <FaUserPlus />}
+      </button>
+    );
+  }
+
+  // full button: icon and text (used in follow lists)
   return (
     <button
       type="button"
@@ -84,13 +106,10 @@ export default function FollowButton({ userId, initialFollowing, size = "sm" }) 
       disabled={isPending}
       className={`inline-flex shrink-0 items-center justify-center gap-1.5 rounded-4xl font-medium transition
         ${size === "lg" ? "px-5 py-3 text-sm" : "px-3 py-3 text-xs"}
-        ${isFollowing
-          ? "bg-gray-200 text-gray-700 hover:bg-gray-300"
-          : "bg-indigo-500 text-white hover:bg-indigo-400"}
-        ${isPending ? "cursor-not-allowed opacity-50" : ""}`}
+        ${stateClasses} ${pendingClasses}`}
     >
       {isFollowing ? <FaUserCheck /> : <FaUserPlus />}
-      {isFollowing ? "Following" : "Follow"}
+      {label}
     </button>
   );
 }

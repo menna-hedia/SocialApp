@@ -119,10 +119,10 @@ export default function CardHeader({ photo, name, description, style, userId, po
 
                 {/* outside the Link so clicking Follow doesn't navigate */}
                 {cardType === "post" && !isMyCard && (
-                    <div className="absolute right-0 top-2">
-                        <FollowButton userId={userId} />
-                    </div>
-                )}
+    <div className="absolute right-0 top-2 z-10">
+        <FollowButton userId={userId} iconOnly />
+    </div>
+)}
             </div>
 
             {showUpdateModal && (
