@@ -7,6 +7,8 @@ import {
 } from "@heroui/react";
 import { SyncLoader } from "react-spinners";
 import { LuImagePlus, LuX, LuRotateCcw } from "react-icons/lu";
+import SharedPost from "../SharedPost/SharedPost";
+import { getOriginalPost } from "../../utils/getOriginalPost";
 
 const FALLBACK_AVATAR = "https://avatars.githubusercontent.com/u/86160567?s=200&v=4";
 const toastOpts = { position: "top-center", autoClose: 1500, theme: "dark" };
@@ -18,6 +20,13 @@ const REMOVE_VARIANTS = [
   { removeImage: true },
   { deleteImage: true },
 ];
+
+// a post is a share when it wraps an original post (the flag names are guesses)
+function isShared(post, original) {
+  return Boolean(
+    original || post?.isShare || post?.isShared || post?.type === "share"
+  );
+}
 
 // 1) loads the post by itself, so it doesn't depend on props from the parents
 export default function PostUpdate({ postId, initialBody, initialImage, authorPhoto, authorName, date, onClose }) {
@@ -46,6 +55,8 @@ export default function PostUpdate({ postId, initialBody, initialImage, authorPh
     );
   }
 
+  const original = getOriginalPost(post);
+
   // the props are only a fallback if the request fails
   return (
     <PostUpdateForm
@@ -53,6 +64,8 @@ export default function PostUpdate({ postId, initialBody, initialImage, authorPh
       postId={postId}
       body={post?.body ?? initialBody ?? ""}
       image={post?.image ?? initialImage ?? null}
+      original={original}
+      isShare={isShared(post, original)}
       authorPhoto={post?.user?.photo ?? authorPhoto}
       authorName={post?.user?.name ?? authorName}
       date={post?.createdAt?.split("T")[0] ?? date}
@@ -62,17 +75,19 @@ export default function PostUpdate({ postId, initialBody, initialImage, authorPh
 }
 
 // 2) the edit form
-function PostUpdateForm({ postId, body, image, authorPhoto, authorName, date, onClose }) {
+function PostUpdateForm({ postId, body, image, original, isShare, authorPhoto, authorName, date, onClose }) {
   const [bodyText, setBodyText] = useState(body);
   const [newImage, setNewImage] = useState(null);
-  const [preview, setPreview] = useState(image);
+  const [preview, setPreview] = useState(isShare ? null : image);
   const [removeImage, setRemoveImage] = useState(false);
   const imageInput = useRef(null);
   const queryClient = useQueryClient();
 
   const textChanged = bodyText !== body;
   const hasChanges = textChanged || Boolean(newImage) || removeImage;
-  const hasContent = bodyText.trim() !== "" || Boolean(preview);
+
+  // a share caption is optional, a normal post needs text or an image
+  const hasContent = isShare || bodyText.trim() !== "" || Boolean(preview);
 
   function handleChangeImage(e) {
     const file = e.target.files?.[0];
@@ -93,13 +108,19 @@ function PostUpdateForm({ postId, body, image, authorPhoto, authorName, date, on
   function handleReset() {
     setBodyText(body);
     setNewImage(null);
-    setPreview(image);
+    setPreview(isShare ? null : image);
     setRemoveImage(false);
   }
 
   async function savePost() {
     const url = `https://route-posts.routemisr.com/posts/${postId}`;
     const headers = { token: localStorage.getItem("token") };
+
+    // shared post: only the caption can change, no image is ever sent
+    if (isShare) {
+      return axios.put(url, { body: bodyText }, { headers });
+    }
+
     const sendBody = bodyText.trim() !== "" || textChanged;
 
     // new image picked (the text is optional)
@@ -154,7 +175,9 @@ function PostUpdateForm({ postId, body, image, authorPhoto, authorName, date, on
   return (
     <Modal isOpen onOpenChange={(open) => !open && onClose()} size="2xl" scrollBehavior="inside">
       <ModalContent>
-        <ModalHeader className="justify-center">Edit Post</ModalHeader>
+        <ModalHeader className="justify-center">
+          {isShare ? "Edit Shared Post" : "Edit Post"}
+        </ModalHeader>
 
         <ModalBody>
           <div className="rounded-xl border border-gray-200 p-4">
@@ -177,12 +200,23 @@ function PostUpdateForm({ postId, body, image, authorPhoto, authorName, date, on
             <textarea
               value={bodyText}
               onChange={(e) => setBodyText(e.target.value)}
-              placeholder="What's on your mind?"
+              placeholder={isShare ? "Say something about this post..." : "What's on your mind?"}
               rows={Math.min(Math.max(bodyText.split("\n").length, 3), 10)}
               className="w-full resize-none rounded-lg bg-gray-50 p-3 text-base text-gray-800 outline-indigo-500"
             />
 
-            {preview && (
+            {/* shared post: the original is read-only and has no image controls */}
+            {isShare && (
+              <>
+                <SharedPost original={original} />
+                <p className="text-xs text-gray-400">
+                  Only your caption can be edited on a shared post.
+                </p>
+              </>
+            )}
+
+            {/* normal post: image preview with remove button */}
+            {!isShare && preview && (
               <div className="relative mt-3">
                 <img src={preview} alt="post" className="max-h-96 w-full rounded-lg object-cover" />
                 <button
@@ -201,7 +235,7 @@ function PostUpdateForm({ postId, body, image, authorPhoto, authorName, date, on
               </div>
             )}
 
-            {removeImage && !preview && (
+            {!isShare && removeImage && !preview && (
               <p className="mt-3 rounded-lg bg-red-50 p-3 text-sm text-red-500">
                 The image will be removed when you save.
               </p>
@@ -216,11 +250,14 @@ function PostUpdateForm({ postId, body, image, authorPhoto, authorName, date, on
         </ModalBody>
 
         <ModalFooter className="flex items-center gap-2">
-          <label className="flex cursor-pointer items-center gap-1 text-sm text-indigo-500">
-            <LuImagePlus className="text-xl" />
-            {preview ? "Change image" : "Add image"}
-            <input type="file" accept="image/*" hidden ref={imageInput} onChange={handleChangeImage} />
-          </label>
+          {/* the image button is hidden for shared posts */}
+          {!isShare && (
+            <label className="flex cursor-pointer items-center gap-1 text-sm text-indigo-500">
+              <LuImagePlus className="text-xl" />
+              {preview ? "Change image" : "Add image"}
+              <input type="file" accept="image/*" hidden ref={imageInput} onChange={handleChangeImage} />
+            </label>
+          )}
 
           <button
             type="button"

@@ -5,6 +5,7 @@ import { useDisclosure } from "@heroui/react";
 import { LuHeart, LuMessageCircle, LuShare2, LuBookmark } from "react-icons/lu";
 import { toast } from "react-toastify";
 import CommentsModal from "../CommentsModal/CommentsModal";
+import ShareModal from "../ShareModal/ShareModal";
 import { useBookmarks, getBookmarkedPosts } from "../../hooks/useBookmarks";
 
 const BASE = "https://route-posts.routemisr.com";
@@ -19,7 +20,8 @@ export default function PostActions({
   commentsQueryKey,
 }) {
   const queryClient = useQueryClient();
-  const { isOpen, onOpen, onOpenChange } = useDisclosure();
+  const comments = useDisclosure();
+  const share = useDisclosure();
 
   const [liked, setLiked] = useState(false);
   const [likes, setLikes] = useState(likesCount);
@@ -44,18 +46,6 @@ export default function PostActions({
       setLikes(previous.likes);
       toast.error("Could not update like", toastOpts);
     },
-  });
-
-  const { mutate: sharePost } = useMutation({
-    mutationFn: () => axios.post(`${BASE}/posts/${postId}/share`, null, authHeaders()),
-    onSuccess: () => {
-      setShares((c) => c + 1);
-      queryClient.invalidateQueries({ queryKey: ["getPosts"] });
-      queryClient.invalidateQueries({ queryKey: ["userPosts"] });
-      navigator.clipboard?.writeText(`${window.location.origin}/postDetails/${postId}`);
-      toast.success("Post shared, link copied", toastOpts);
-    },
-    onError: () => toast.error("Could not share post", toastOpts),
   });
 
   const { mutate: toggleSave } = useMutation({
@@ -93,12 +83,12 @@ export default function PostActions({
           <span>{likes}</span>
         </button>
 
-        <button type="button" onClick={onOpen} className={base} aria-label="Comments">
+        <button type="button" onClick={comments.onOpen} className={base} aria-label="Comments">
           <LuMessageCircle className="text-xl" />
           <span>{commentsCount}</span>
         </button>
 
-        <button type="button" onClick={() => sharePost()} className={base} aria-label="Share">
+        <button type="button" onClick={share.onOpen} className={base} aria-label="Share">
           <LuShare2 className="text-xl" />
           <span>{shares}</span>
         </button>
@@ -115,9 +105,16 @@ export default function PostActions({
 
       <CommentsModal
         postId={postId}
-        isOpen={isOpen}
-        onOpenChange={onOpenChange}
+        isOpen={comments.isOpen}
+        onOpenChange={comments.onOpenChange}
         queryKey={commentsQueryKey}
+      />
+
+      <ShareModal
+        postId={postId}
+        isOpen={share.isOpen}
+        onOpenChange={share.onOpenChange}
+        onShared={() => setShares((c) => c + 1)}
       />
     </>
   );
