@@ -1,17 +1,18 @@
 import { useContext } from "react";
 import { NavLink, Link } from "react-router-dom";
-import { LuHouse, LuUser, LuBookmark, LuBell, LuInfo } from "react-icons/lu";
 import { profileContext } from "../../context/ProfileContext";
 import { useUnreadCount, getUnreadCount } from "../../hooks/useNotifications";
+import { LuHouse, LuUser, LuBookmark, LuBell, LuInfo, LuCompass } from "react-icons/lu";
 
 const FALLBACK_AVATAR = "https://avatars.githubusercontent.com/u/86160567?s=200&v=4";
 
 const links = [
   { to: "/home", label: "Home", icon: LuHouse },
+  { to: "/explore", label: "Explore", icon: LuCompass },
   { to: "/profile", label: "Profile", icon: LuUser },
-  { to: "/about", label: "About", icon: LuInfo },
   { to: "/bookmarks", label: "Saved", icon: LuBookmark },
   { to: "/notifications", label: "Notifications", icon: LuBell },
+  { to: "/about", label: "About", icon: LuInfo },
 ];
 
 export default function LeftSidebar() {

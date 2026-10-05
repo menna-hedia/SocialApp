@@ -101,6 +101,7 @@ if (isError || !data?.data?.post) {
 
                     <PostActions
                         postId={id}
+                        post={post}
                         likesCount={likesCount}
                         commentsCount={commentsCount}
                         sharesCount={sharesCount}

@@ -89,6 +89,7 @@ export default function PostCard({ postInfo, queryKey, compact = false }) {
 
             <PostActions
                 postId={_id}
+                post={postInfo}
                 likesCount={likesCount}
                 commentsCount={commentsCount}
                 sharesCount={sharesCount}

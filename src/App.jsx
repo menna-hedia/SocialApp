@@ -18,6 +18,7 @@ import About from './Components/About/About';
 import UserProfile from './Components/UserProfile/UserProfile';
 import BookmarksPage from './Components/BookmarksPage/BookmarksPage';
 import NotificationsPage from './Components/NotificationsPage/NotificationsPage';
+import ExplorePage from './Components/ExplorePage/ExplorePage';
 
 const App = () => {
 
@@ -34,6 +35,7 @@ const App = () => {
         { path: "bookmarks", element: <RoutesProtector><BookmarksPage /></RoutesProtector> },
         { path: "notifications", element: <RoutesProtector><NotificationsPage /></RoutesProtector> },
         { path: "user/:userId", element: <RoutesProtector><UserProfile /></RoutesProtector> },
+        { path: "explore", element: <RoutesProtector><ExplorePage /></RoutesProtector> },
         { path: "*", element: <RoutesProtector> <NotFound /> </RoutesProtector> },
       ]
     },
@@ -50,13 +52,13 @@ const App = () => {
             <ProfileContextProvider>
               <RouterProvider router={router} />
               <ToastContainer
-  position="top-right"
-  autoClose={1000}
-  limit={3}
-  newestOnTop
-  pauseOnFocusLoss={false}
-  theme="light"
-/>
+                position="top-right"
+                autoClose={1000}
+                limit={3}
+                newestOnTop
+                pauseOnFocusLoss={false}
+                theme="light"
+              />
             </ProfileContextProvider>
           </AuthContextProvider>
         </HeroUIProvider>

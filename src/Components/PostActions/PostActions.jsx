@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useContext, useEffect, useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 import { useDisclosure } from "@heroui/react";
 import { LuHeart, LuMessageCircle, LuShare2, LuBookmark } from "react-icons/lu";
@@ -7,6 +7,7 @@ import { toast } from "react-toastify";
 import CommentsModal from "../CommentsModal/CommentsModal";
 import ShareModal from "../ShareModal/ShareModal";
 import { useBookmarks, getBookmarkedPosts } from "../../hooks/useBookmarks";
+import { authContext } from "../../context/AuthContext";
 
 const BASE = "https://route-posts.routemisr.com";
 const authHeaders = () => ({ headers: { token: localStorage.getItem("token") } });
@@ -14,18 +15,46 @@ const toastOpts = { position: "top-right", autoClose: 1000 };
 
 export default function PostActions({
   postId,
+  post,
   likesCount = 0,
   commentsCount = 0,
   sharesCount = 0,
   commentsQueryKey,
 }) {
   const queryClient = useQueryClient();
+  const { userId } = useContext(authContext) || {};
   const comments = useDisclosure();
   const share = useDisclosure();
 
-  const [liked, setLiked] = useState(false);
-  const [likes, setLikes] = useState(likesCount);
+  const likeStateKey = ["postLike", userId, postId];
+  const serverLiked =
+    typeof post?.isLiked === "boolean"
+      ? post.isLiked
+      : typeof post?.liked === "boolean"
+        ? post.liked
+        : Array.isArray(post?.likes)
+          ? post.likes.some((like) => (like?._id || like) === userId)
+          : undefined;
+  const { data: likeState } = useQuery({
+    queryKey: likeStateKey,
+    queryFn: () => ({ liked: serverLiked ?? false, likes: likesCount }),
+    initialData: { liked: serverLiked ?? false, likes: likesCount },
+    staleTime: Infinity,
+    gcTime: Infinity,
+    enabled: false,
+  });
+  const liked = likeState.liked;
+  const likes = likeState.likes;
   const [shares, setShares] = useState(sharesCount);
+
+  useEffect(() => {
+    const current = queryClient.getQueryData(["postLike", userId, postId]);
+    if (serverLiked === undefined && likesCount === current?.likes) return;
+    queryClient.setQueryData(["postLike", userId, postId], (current) => ({
+      liked: serverLiked ?? current?.liked ?? false,
+      likes: likesCount,
+    }));
+  }, [serverLiked, likesCount, queryClient, userId, postId]);
 
   // saved state comes from the shared bookmarks list, so it survives a refresh
   const { data: bookmarksData } = useBookmarks();
@@ -36,14 +65,23 @@ export default function PostActions({
   const { mutate: toggleLike } = useMutation({
     mutationFn: () => axios.put(`${BASE}/posts/${postId}/like`, null, authHeaders()),
     onMutate: () => {
-      const previous = { liked, likes };
-      setLiked(!liked);
-      setLikes((c) => (liked ? c - 1 : c + 1));
-      return previous;
+      const previous = queryClient.getQueryData(likeStateKey) ?? {
+        liked: serverLiked ?? false,
+        likes: likesCount,
+      };
+      queryClient.setQueryData(likeStateKey, {
+        liked: !previous.liked,
+        likes: Math.max(0, previous.likes + (previous.liked ? -1 : 1)),
+      });
+      return { previous };
     },
-    onError: (_err, _vars, previous) => {
-      setLiked(previous.liked);
-      setLikes(previous.likes);
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["getPosts"] });
+      queryClient.invalidateQueries({ queryKey: ["getPostDetails", postId] });
+      queryClient.invalidateQueries({ queryKey: ["userPosts"] });
+    },
+    onError: (_err, _vars, context) => {
+      queryClient.setQueryData(likeStateKey, context.previous);
       toast.error("Could not update like", toastOpts);
     },
   });
