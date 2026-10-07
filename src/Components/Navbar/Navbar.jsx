@@ -10,11 +10,11 @@ const FALLBACK_AVATAR = "https://avatars.githubusercontent.com/u/86160567?s=200&
 
 const mobileLinks = [
     { to: "/home", label: "Home", icon: LuHouse },
-    { to: "/profile", label: "Profile", icon: LuUser },
-    { to: "/about", label: "About", icon: LuInfo },
-    { to: "/bookmarks", label: "Saved", icon: LuBookmark },
-    { to: "/notifications", label: "Notifications", icon: LuBell },
-    { to: "/explore", label: "Explore", icon: LuCompass },
+  { to: "/explore", label: "Explore", icon: LuCompass },
+  { to: "/profile", label: "Profile", icon: LuUser },
+  { to: "/bookmarks", label: "Saved", icon: LuBookmark },
+  { to: "/notifications", label: "Notifications", icon: LuBell },
+  { to: "/about", label: "About", icon: LuInfo },
 ];
 
 const Navbar = () => {
