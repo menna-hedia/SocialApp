@@ -65,7 +65,8 @@ export default function PostCreation({ compact = false, asButton = false }) {
       return axios.post("https://route-posts.routemisr.com/posts", postObj, {
         headers: { token: localStorage.getItem("token") },
       });
-    }, ccess: () => {
+    },
+    onSuccess: () => {
       handleClose();
       queryClient.invalidateQueries({ queryKey: ["getPosts"] });
       queryClient.invalidateQueries({ queryKey: ["userPosts"] });
