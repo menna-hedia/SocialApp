@@ -72,12 +72,12 @@ export default function CommentCard({ commentDetails, commentId, postId, queryKe
 
             {comment?.content && <p className="m-2 break-words">{comment.content}</p>}
             {comment?.image && (
-                <img
-                    src={comment.image}
-                    alt="comment attachment"
-                    className="m-2 max-w-xs rounded-xl"
-                />
-            )}
+    <img
+        src={comment.image}
+        alt="comment attachment"
+        className="m-2 block w-auto max-w-100 max-h-40 rounded-xl object-cover"
+    />
+)}
 
             {realPostId && realCommentId && (
                 <>
